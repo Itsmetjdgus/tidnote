@@ -103,7 +103,35 @@ function renderFooter() {
     links.append(a);
   });
 
-  footer.append(links);
+    footer.append(links);
+
+  // 언어 전환 (i18n.js가 있는 페이지에서만)
+  if (typeof getLang === 'function' && typeof setLang === 'function') {
+    const langLinks = document.createElement('p');
+    langLinks.className = 'footer-links';
+    [
+      { code: 'ko', label: '한국어' },
+      { code: 'en', label: 'English' },
+    ].forEach(function (item, index) {
+      if (index > 0) langLinks.append(' · ');
+      if (getLang() === item.code) {
+        const current = document.createElement('strong');
+        current.textContent = item.label;
+        langLinks.append(current);
+        return;
+      }
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'link-button';
+      button.textContent = item.label;
+      button.addEventListener('click', function () {
+        setLang(item.code);
+        location.reload();
+      });
+      langLinks.append(button);
+    });
+    footer.append(langLinks);
+  }
 }
 
 renderFooter();

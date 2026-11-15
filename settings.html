@@ -76,6 +76,23 @@
 
                 <!-- 보안 -->
                 <section id="tab-security" class="post settings-panel" hidden>
+                    <h3 data-i18n="pw.title"></h3>
+                    <p data-i18n="pw.desc"></p>
+                    <form class="write-form" id="pw-form">
+                        <label for="pw-current" data-i18n="pw.current"></label>
+                        <input type="password" id="pw-current" autocomplete="current-password">
+                        <label for="pw-new" data-i18n="pw.new"></label>
+                        <input type="password" id="pw-new" autocomplete="new-password">
+                        <label for="pw-again" data-i18n="pw.confirm"></label>
+                        <input type="password" id="pw-again" autocomplete="new-password">
+                        <label class="check">
+                            <input type="checkbox" id="pw-show">
+                            <span data-i18n="pw.show"></span>
+                        </label>
+                        <button type="submit" id="pw-btn" data-i18n="pw.btn"></button>
+                        <p id="pw-message" class="form-message"></p>
+                    </form>
+                    <hr>
                     <h3 data-i18n="settings.delete_title"></h3>
                     <p data-i18n="settings.delete_desc"></p>
                     <form class="write-form" id="delete-form">
@@ -86,6 +103,20 @@
                         <button type="submit" id="delete-account-btn" class="danger-btn" data-i18n="settings.delete_btn"></button>
                         <p id="delete-message" class="form-message"></p>
                     </form>
+                </section>
+
+                                <!-- 언어 -->
+                <section id="tab-language" class="post settings-panel" hidden>
+                    <h3 data-i18n="settings.lang_title"></h3>
+                    <p data-i18n="settings.lang_desc"></p>
+                    <label class="option">
+                        <input type="radio" name="lang" value="ko">
+                        <span><strong>한국어</strong></span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="lang" value="en">
+                        <span><strong>English</strong></span>
+                    </label>
                 </section>
 
                 <!-- 정보 -->
@@ -115,5 +146,7 @@
     <script src="block.js"></script> 
     <script src="settings.js"></script>
     <script src="blocked-list.js"></script> 
+    <script src="password-change.js"></script>   
+    <script src="language-select.js"></script>
 </body>
 </html>
