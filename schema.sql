@@ -635,3 +635,20 @@ revoke execute on function public.hidden_user_ids() from public, anon;
 revoke execute on function public.get_block_relation(uuid) from public, anon;
 grant execute on function public.hidden_user_ids() to authenticated;
 grant execute on function public.get_block_relation(uuid) to authenticated;
+
+-- 31일차: 글 사진 보호 (post-images 비공개 + can_view_author 규칙)
+
+-- 1) 버킷을 비공개로
+update storage.buckets set public = false where id = 'post-images';
+
+-- 2) 예전의 "누구나 읽기" 규칙 제거
+drop policy if exists "anyone can view post images" on storage.objects;
+drop policy if exists "view post images of viewable authors" on storage.objects;
+
+-- 3) 글을 볼 수 있는 사람만 사진도 볼 수 있다 (폴더 이름 = 작성자 id)
+create policy "view post images of viewable authors"
+  on storage.objects for select
+  using (
+    bucket_id = 'post-images'
+    and public.can_view_author(((storage.foldername(name))[1])::uuid)
+  );

@@ -44,7 +44,9 @@ async function loadPosts() {
     return;
   }
 
-  data.forEach((post) => list.append(renderPostCard(post, true)));
+    data.forEach((post) => list.append(renderPostCard(post, true)));
+  fillPostImages(list);
+  
 
   const totalPages = Math.max(1, Math.ceil((count || 0) / PAGE_SIZE));
 

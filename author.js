@@ -41,5 +41,6 @@
     return;
   }
 
-  posts.forEach((post) => list.append(renderPostCard(post, false)));
+    posts.forEach((post) => list.append(renderPostCard(post, false)));
+  fillPostImages(list);
 })();

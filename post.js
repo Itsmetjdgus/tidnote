@@ -54,7 +54,7 @@
 
   if (post.image_path) {
     const img = document.createElement('img');
-    img.src = getImageUrl(post.image_path);
+    img.dataset.imagePath = post.image_path; // 실제 주소는 fillPostImages가 채운다
     img.alt = post.title;
     img.className = 'post-image';
     img.loading = 'lazy';
@@ -62,6 +62,7 @@
   }
 
   article.append(body);
+  fillPostImages(article);
 
   if (isOwner) {
     const actions = document.createElement('div');
