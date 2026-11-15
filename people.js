@@ -41,7 +41,13 @@
     note(t('people.error'));
     return;
   }
-  if (!data || data.length === 0) {
+    // 차단 관계인 사람(내가 차단 + 나를 차단)은 결과에서 뺀다. 로그아웃이면 빈 배열.
+  const hidden = myId ? await getHiddenIds() : [];
+  const visible = (data || []).filter(function (p) {
+    return hidden.indexOf(p.id) === -1;
+  });
+
+  if (visible.length === 0) {
     note(t('people.none'));
     return;
   }
@@ -53,11 +59,11 @@
     if (n.startsWith(lower)) return 1;
     return 2;
   }
-  data.sort(function (a, b) {
+  visible.sort(function (a, b) {
     return rank(a.nickname) - rank(b.nickname) || a.nickname.localeCompare(b.nickname);
   });
 
-  data.slice(0, MAX_SHOWN).forEach(function (person) {
+  visible.slice(0, MAX_SHOWN).forEach(function (person) {
     const card = document.createElement('a');
     card.className = 'person-card';
     card.href = 'author.html?id=' + encodeURIComponent(person.id);
@@ -82,5 +88,5 @@
     list.append(card);
   });
 
-  if (data.length > MAX_SHOWN) note(t('people.more_hint'));
+  if (visible.length > MAX_SHOWN) note(t('people.more_hint'));
 })();

@@ -18,6 +18,10 @@
   const me = userData && userData.user ? userData.user.id : null;
   const isMine = me === profile.id;
 
+    // 차단 관계 ('none' | 'blocking' | 'blocked'). 로그아웃/내 프로필이면 'none'
+  let relation = 'none';
+  if (me && !isMine) relation = await getBlockRelation(profile.id);
+
     // 팔로워 수(누구나 볼 수 있음). 팔로잉 수는 본인에게만 오고 타인에게는 null.
   // 내 프로필이면 받은 요청 수도 읽는다.
   let counts = { followers: 0, following: null };
@@ -81,13 +85,20 @@
     }
     info.appendChild(stats);
 
-    if (isMine) {
+       if (isMine) {
       const editBtn = document.createElement('button');
       editBtn.type = 'button';
       editBtn.textContent = t('profile.edit');
       editBtn.addEventListener('click', renderEdit);
       info.appendChild(editBtn);
+    } else if (me && relation === 'blocked') {
+      // 상대가 나를 차단함: 차단 사실을 직접 알리지 않고 볼 수 없다고만 안내
+      const notice = document.createElement('p');
+      notice.className = 'state-message';
+      notice.textContent = t('block.unavailable');
+      info.appendChild(notice);
     } else if (me) {
+      info.appendChild(createBlockControl(profile.id, profile.nickname, relation));
       info.appendChild(createReportControl('profile', profile.id));
     }
 

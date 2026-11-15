@@ -114,7 +114,17 @@ const I18N = {
     'signup.pw_mismatch': '비밀번호가 서로 다릅니다.',
     'signup.check_email': '이메일을 확인해 계정을 인증해 주세요.',
     'signup.have_account': '이미 계정이 있나요?',
-    'signup.login': '로그인'
+    'signup.login': '로그인',
+    'block.block': '차단',
+    'block.unblock': '차단 해제',
+    'block.confirm_block': '{name}님을 차단할까요? 서로의 팔로우가 해제되고, 서로의 글과 댓글이 보이지 않으며, 검색에도 나타나지 않습니다.',
+    'block.confirm_unblock': '{name}님의 차단을 해제할까요?',
+    'block.error': '처리하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+    'block.unavailable': '이 계정은 볼 수 없습니다.',
+    'block.list_title': '차단한 계정',
+    'block.list_desc': '차단한 계정은 나를 팔로우하거나 내 글을 볼 수 없습니다. 상대에게는 알림이 가지 않습니다.',
+    'block.list_empty': '차단한 계정이 없습니다.',
+    'block.load_failed': '차단 목록을 불러오지 못했습니다.',
   },
   en: {
     'profile.posts_of': "{name}'s posts",
@@ -230,7 +240,17 @@ const I18N = {
     'signup.pw_mismatch': 'Passwords do not match.',
     'signup.check_email': 'Check your email to confirm your account.',
     'signup.have_account': 'Already have an account?',
-    'signup.login': 'Log in'
+    'signup.login': 'Log in',
+    'block.block': 'Block',
+    'block.unblock': 'Unblock',
+    'block.confirm_block': 'Block {name}? You will unfollow each other, neither of you will see the other\'s posts and comments, and you will not appear in each other\'s search results.',
+    'block.confirm_unblock': 'Unblock {name}?',
+    'block.error': 'Could not complete the action. Please try again in a moment.',
+    'block.unavailable': 'This account is not available.',
+    'block.list_title': 'Blocked accounts',
+    'block.list_desc': 'Blocked accounts cannot follow you or see your posts. They are not notified.',
+    'block.list_empty': 'You have not blocked anyone.',
+    'block.load_failed': 'Failed to load the blocked list.',
 
   }
 };

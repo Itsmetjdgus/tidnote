@@ -67,6 +67,11 @@
                         <button type="button" id="privacy-save" data-i18n="settings.save"></button>
                         <p id="privacy-message" class="form-message"></p>
                     </div>
+                    <hr>
+                    <h3 data-i18n="block.list_title"></h3>
+                    <p data-i18n="block.list_desc"></p>
+                    <div id="blocked-list"></div>
+                    <p id="blocked-message" class="form-message"></p>
                 </section>
 
                 <!-- 보안 -->
@@ -105,7 +110,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase.js"></script>
     <script src="i18n.js"></script>
+    <script src="avatar.js"></script> 
     <script src="nav.js"></script>
+    <script src="block.js"></script> 
     <script src="settings.js"></script>
+    <script src="blocked-list.js"></script> 
 </body>
 </html>

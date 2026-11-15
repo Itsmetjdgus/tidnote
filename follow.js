@@ -203,7 +203,12 @@
     if (error || !data) return;
     profile = data;
 
-    if (me && me !== authorId) await loadStatus();
+        if (me && me !== authorId) {
+      // 차단 관계면 팔로우 영역 자체를 만들지 않는다
+      const relation = await getBlockRelation(authorId);
+      if (relation !== 'none') return;
+      await loadStatus();
+    }
     render();
   }
 

@@ -579,3 +579,59 @@ alter table reports
 create unique index if not exists reports_profile_unique
   on reports (reporter_id, target_user)
   where target_type = 'profile';
+
+ -- 29일차: 차단 보강 (limit_blocks, hidden_user_ids, get_block_relation)
+
+-- 1) 차단 목록 최대 200명
+create or replace function public.limit_blocks()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if (select count(*) from public.blocks where blocker_id = new.blocker_id) >= 200 then
+    raise exception 'Too many blocked accounts.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists limit_blocks_trigger on public.blocks;
+create trigger limit_blocks_trigger
+  before insert on public.blocks
+  for each row execute function public.limit_blocks();
+
+-- 2) 나와 차단 관계(내가 차단 + 나를 차단)인 사용자 id 목록
+create or replace function public.hidden_user_ids()
+returns setof uuid
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select blocked_id from public.blocks where blocker_id = auth.uid()
+  union
+  select blocker_id from public.blocks where blocked_id = auth.uid();
+$$;
+
+-- 3) 특정 사람과의 차단 관계: 'blocking'(내가 차단) / 'blocked'(상대가 나를 차단) / 'none'
+create or replace function public.get_block_relation(target uuid)
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select case
+    when exists (select 1 from public.blocks where blocker_id = auth.uid() and blocked_id = target) then 'blocking'
+    when exists (select 1 from public.blocks where blocker_id = target and blocked_id = auth.uid()) then 'blocked'
+    else 'none'
+  end;
+$$;
+
+-- 4) 로그인한 사용자만 호출 가능
+revoke execute on function public.hidden_user_ids() from public, anon;
+revoke execute on function public.get_block_relation(uuid) from public, anon;
+grant execute on function public.hidden_user_ids() to authenticated;
+grant execute on function public.get_block_relation(uuid) to authenticated;
