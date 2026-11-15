@@ -178,22 +178,21 @@
 
     const userId = session.user.id;
 
-    // 2) 글 이미지 삭제
-    const { data: myPosts, error: postsError } = await db
-      .from('posts')
-      .select('image_path')
-      .eq('author_id', userId)
-      .not('image_path', 'is', null);
+        // 2) 글 이미지 삭제 (내 폴더의 파일을 전부 지운다. 글에 연결되지 않은 파일도 포함)
+    const { data: imageFiles, error: listError } = await db.storage
+      .from('post-images')
+      .list(userId, { limit: 1000 });
 
-    if (postsError) {
+    if (listError) {
       deleteMessage.textContent = t('settings.delete_failed');
       deleteBtn.disabled = false;
       return;
     }
 
-    const paths = myPosts.map(function (p) { return p.image_path; });
-    if (paths.length > 0) {
-      const { error: removeError } = await db.storage.from('post-images').remove(paths);
+    if (imageFiles && imageFiles.length > 0) {
+      const { error: removeError } = await db.storage
+        .from('post-images')
+        .remove(imageFiles.map(function (f) { return userId + '/' + f.name; }));
       if (removeError) {
         deleteMessage.textContent = t('settings.delete_images_failed');
         deleteBtn.disabled = false;

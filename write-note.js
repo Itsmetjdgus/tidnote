@@ -16,7 +16,7 @@
 
   privacyNote.append(
     me.is_private
-      ? 'Your account is private. Only people you approve can see your posts. Photos are not fully protected yet, so please do not attach photos. '
+            ? 'Your account is private. Only people you approve can see your posts and photos. We cannot stop an approved follower from saving a photo, so avoid sensitive photos. '
       : 'Your account is public. Anyone can see your posts. '
   );
 
