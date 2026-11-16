@@ -109,6 +109,10 @@ const I18N = {
     'signup.agree_after': '에 동의합니다.',
     'signup.submit': '가입하기',
     'signup.working': '가입하는 중...',
+    'signup.exists': '이미 가입된 이메일입니다. 로그인해 주세요.',
+    'signup.bad_email': '올바른 이메일 주소를 입력해 주세요.',
+    'signup.rate_limited': '시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.',
+    'signup.failed': '가입하지 못했습니다. 잠시 후 다시 시도해 주세요.',
     'signup.need_agree': '만 14세 이상이며 약관에 동의해야 가입할 수 있습니다.',
     'signup.pw_short': '비밀번호는 8자 이상이어야 합니다.',
     'signup.pw_mismatch': '비밀번호가 서로 다릅니다.',
@@ -390,6 +394,10 @@ const I18N = {
     'signup.agree_after': '.',
     'signup.submit': 'Sign up',
     'signup.working': 'Signing up...',
+    'signup.exists': 'This email is already registered. Please log in.',
+    'signup.bad_email': 'Please enter a valid email address.',
+    'signup.rate_limited': 'Too many attempts. Please try again in a moment.',
+    'signup.failed': 'Could not sign up. Please try again in a moment.',
     'signup.need_agree': 'Please confirm you are 14 or older and agree to the Terms and Privacy Policy.',
     'signup.pw_short': 'Password must be at least 8 characters.',
     'signup.pw_mismatch': 'Passwords do not match.',
@@ -602,4 +610,6 @@ function applyI18n() {
   });
 }
 
+// 화면이 그려지기 전에 언어를 먼저 정해, 영어 본문이 잠깐 보이는 현상을 막는다
+document.documentElement.lang = getLang();
 document.addEventListener('DOMContentLoaded', applyI18n);

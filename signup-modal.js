@@ -183,7 +183,18 @@ function showSignupModal() {
     });
 
     if (error) {
-      msg.textContent = error.message;
+      const code = error.code || '';
+      if (code === 'user_already_exists' || code === 'email_exists') {
+        msg.textContent = t('signup.exists');
+      } else if (code === 'weak_password') {
+        msg.textContent = t('reset.weak');
+      } else if (code === 'email_address_invalid' || code === 'validation_failed') {
+        msg.textContent = t('signup.bad_email');
+      } else if (error.status === 429 || code.indexOf('rate_limit') !== -1) {
+        msg.textContent = t('signup.rate_limited');
+      } else {
+        msg.textContent = t('signup.failed');
+      }
       submit.disabled = false;
       return;
     }

@@ -440,10 +440,13 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
-.legal [lang="ko"] {
-  margin-top: 28px;
-  padding-top: 20px;
-  border-top: 1px solid #ddd;
+/* 약관·개인정보·신고·도움말: 선택한 언어의 본문만 보여 준다 */
+html[lang="ko"] .legal [data-lang="en"] {
+  display: none;
+}
+
+html:not([lang="ko"]) .legal [data-lang="ko"] {
+  display: none;
 }
 
 header h1 {
