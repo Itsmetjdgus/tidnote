@@ -14,14 +14,10 @@
 
   if (!me) return;
 
-  privacyNote.append(
-    me.is_private
-            ? 'Your account is private. Only people you approve can see your posts and photos. We cannot stop an approved follower from saving a photo, so avoid sensitive photos. '
-      : 'Your account is public. Anyone can see your posts. '
-  );
+  privacyNote.append(t(me.is_private ? 'write.note_private' : 'write.note_public') + ' ');
 
   const changeLink = document.createElement('a');
   changeLink.href = 'settings.html?tab=privacy';
-  changeLink.textContent = 'Change in Settings.';
+  changeLink.textContent = t('common.change_settings');
   privacyNote.append(changeLink);
 })();

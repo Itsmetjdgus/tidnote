@@ -1,6 +1,6 @@
 (function () {
   // 비공개 안내를 보여줄 때 숨길 "빈 목록" 문구입니다. author.js가 보여 주는 문구와 정확히 같아야 합니다.
-  const EMPTY_TEXTS = ['No posts yet.'];
+  const EMPTY_TEXTS = [t('blog.empty')];
 
   const params = new URLSearchParams(window.location.search);
   const authorId = params.get('id');
@@ -86,9 +86,9 @@
         return;
       }
       if (error.message && error.message.includes('Too many')) {
-        showMessage('Too many follow actions. Please wait a moment.');
+        showMessage(t('follow.too_many'));
       } else {
-        showMessage('Unable to follow this user.');
+        showMessage(t('follow.failed_follow'));
       }
       return;
     }
@@ -108,7 +108,7 @@
       .eq('following_id', authorId);
 
     if (error) {
-      showMessage('Failed. Please try again.');
+      showMessage(t('conn.error'));
       return;
     }
 
@@ -131,7 +131,7 @@
     if (profile.is_private) {
       const badge = document.createElement('span');
       badge.className = 'account-badge';
-      badge.textContent = 'Private account';
+      badge.textContent = t('follow.private_badge');
       area.append(badge);
     }
 
@@ -141,24 +141,24 @@
     if (isOwn) {
       const note = document.createElement('span');
       note.className = 'follow-note';
-      note.append(profile.is_private ? 'Your account is private. ' : 'Your account is public. ');
+      note.append(t(profile.is_private ? 'follow.own_private' : 'follow.own_public') + ' ');
       const link = document.createElement('a');
       link.href = 'settings.html?tab=privacy';
-      link.textContent = 'Change in Settings.';
+      link.textContent = t('common.change_settings');
       note.append(link);
       row.append(note);
     } else if (!me) {
       const link = document.createElement('a');
       link.className = 'follow-btn';
       link.href = 'login.html';
-      link.textContent = 'Log in to follow';
+      link.textContent = t('follow.login');
       row.append(link);
     } else if (followStatus === 'accepted') {
-      row.append(makeButton('Following', true, () => unfollow('Unfollow ' + profile.nickname + '?')));
+      row.append(makeButton(t('follow.following'), true, () => unfollow(t('conn.confirm_unfollow', { name: profile.nickname }))));
     } else if (followStatus === 'pending') {
-      row.append(makeButton('Requested', true, () => unfollow('Cancel your follow request?')));
+      row.append(makeButton(t('follow.requested'), true, () => unfollow(t('conn.confirm_cancel', { name: profile.nickname }))));
     } else {
-      row.append(makeButton(profile.is_private ? 'Request to follow' : 'Follow', false, follow));
+      row.append(makeButton(t(profile.is_private ? 'follow.request' : 'follow.follow'), false, follow));
     }
 
     area.append(row);
@@ -173,15 +173,15 @@
       notice.className = 'private-notice';
 
       const title = document.createElement('strong');
-      title.textContent = 'This account is private.';
+      title.textContent = t('follow.locked_title');
 
       const text = document.createElement('p');
       if (followStatus === 'pending') {
-        text.textContent = 'Your follow request is waiting for approval.';
+        text.textContent = t('follow.locked_pending');
       } else if (me) {
-        text.textContent = 'Follow this account to see their posts.';
+        text.textContent = t('follow.locked_follow');
       } else {
-        text.textContent = 'Log in and follow this account to see their posts.';
+        text.textContent = t('follow.locked_login');
       }
 
       notice.append(title, text);

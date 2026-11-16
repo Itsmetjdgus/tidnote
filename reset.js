@@ -6,8 +6,10 @@
   const confirmInput = document.getElementById('confirm-password');
   const button = document.getElementById('reset-btn');
 
+  info.textContent = t('reset.checking');
+
   if (window.location.hash.includes('error')) {
-    info.textContent = 'This reset link is invalid or has expired. Please request a new one.';
+    info.textContent = t('reset.invalid');
     return;
   }
 
@@ -16,14 +18,14 @@
   db.auth.onAuthStateChange((event) => {
     if (event === 'PASSWORD_RECOVERY') {
       ready = true;
-      info.textContent = 'Enter your new password.';
+      info.textContent = t('reset.enter');
       form.hidden = false;
     }
   });
 
   setTimeout(() => {
     if (!ready) {
-      info.textContent = 'Open this page from the link in your reset email. You can request a new link on the Forgot password page.';
+      info.textContent = t('reset.open_from_mail');
     }
   }, 4000);
 
@@ -31,28 +33,30 @@
     message.className = 'form-message';
 
     if (newInput.value.length < 8) {
-      message.textContent = 'Password must be at least 8 characters.';
+      message.textContent = t('signup.pw_short');
       return;
     }
 
     if (newInput.value !== confirmInput.value) {
-      message.textContent = 'Passwords do not match.';
+      message.textContent = t('signup.pw_mismatch');
       return;
     }
 
     button.disabled = true;
-    message.textContent = 'Updating...';
+    message.textContent = t('pw.working');
 
     const { error } = await db.auth.updateUser({ password: newInput.value });
 
     if (error) {
-      message.textContent = error.message;
+      if (error.code === 'same_password') message.textContent = t('pw.same');
+      else if (error.code === 'weak_password') message.textContent = t('reset.weak');
+      else message.textContent = t('pw.failed');
       button.disabled = false;
       return;
     }
 
     message.className = 'form-message ok';
-    message.textContent = 'Password updated. Redirecting...';
+    message.textContent = t('reset.done');
 
     setTimeout(() => {
       window.location.href = 'blog.html';

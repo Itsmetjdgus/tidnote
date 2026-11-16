@@ -17,22 +17,21 @@
     </header>
 
     <main>
-        <h2>Log in</h2>
+        <h2 data-i18n="login.title"></h2>
         <form class="write-form" id="login-form">
-            <label for="email">Email</label>
-            <input type="email" id="email" placeholder="your email" autocomplete="email" required>
+            <label for="email" data-i18n="login.email"></label>
+            <input type="email" id="email" data-i18n-placeholder="login.ph_email" autocomplete="email" required>
 
-            <label for="password">Password</label>
-            <input type="password" id="password" placeholder="Your password" autocomplete="current-password" required>
+            <label for="password" data-i18n="login.password"></label>
+            <input type="password" id="password" data-i18n-placeholder="login.ph_password" autocomplete="current-password" required>
 
-            <button type="submit" id="login-btn">Log in</button>
-            <p class="auth-links"><a href="forgot.html">Forgot password?</a></p>
+            <button type="submit" id="login-btn" data-i18n="login.btn"></button>
+            <p class="auth-links"><a href="forgot.html" data-i18n="login.forgot"></a></p>
             <p id="auth-message" class="form-message"></p>
         </form>
 
-        <p class="auth-links">New to Tidnote? <button type="button" id="open-signup-btn" class="link-button">Sign up</button></p>
+        <p class="auth-links"><span data-i18n="login.new"></span> <button type="button" id="open-signup-btn" class="link-button" data-i18n="login.signup"></button></p>
     </main>
-
     <footer>
         <p>Tidnote</p>
     </footer>

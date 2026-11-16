@@ -17,17 +17,17 @@
     </header>
 
     <main>
-        <h2>Reset password</h2>
-        <p id="reset-info" class="state-message">Checking your reset link...</p>
+        <h2 data-i18n="reset.title"></h2>
+        <p id="reset-info" class="state-message"></p>
 
         <form class="write-form" id="reset-form" hidden>
-            <label for="new-password">New password</label>
-            <input type="password" id="new-password" placeholder="At least 8 characters" autocomplete="new-password">
+            <label for="new-password" data-i18n="pw.new"></label>
+            <input type="password" id="new-password" data-i18n-placeholder="reset.ph_new" autocomplete="new-password">
 
-            <label for="confirm-password">Confirm new password</label>
+            <label for="confirm-password" data-i18n="pw.confirm"></label>
             <input type="password" id="confirm-password" autocomplete="new-password">
 
-            <button type="button" id="reset-btn">Update password</button>
+            <button type="button" id="reset-btn" data-i18n="pw.btn"></button>
             <p id="reset-message" class="form-message"></p>
         </form>
     </main>

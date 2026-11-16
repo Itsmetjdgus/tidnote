@@ -32,12 +32,12 @@
     .order('created_at', { ascending: false });
 
   if (postsError) {
-    list.textContent = 'Failed to load posts.';
+    list.textContent = t('blog.load_failed');
     return;
   }
 
   if (posts.length === 0) {
-    list.textContent = 'No posts yet.';
+    list.textContent = t('blog.empty');
     return;
   }
 

@@ -6,6 +6,7 @@
 
   if (data.session) {
     cta.href = 'write.html';
+    cta.dataset.i18n = 'home.write_post';
     cta.textContent = t('home.write_post');
   } else {
     cta.addEventListener('click', function (event) {

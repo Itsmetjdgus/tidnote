@@ -7,13 +7,13 @@ sendBtn.addEventListener('click', async () => {
 
   if (!email) {
     message.className = 'form-message';
-    message.textContent = 'Please enter your email.';
+    message.textContent = t('forgot.need_email');
     return;
   }
 
   sendBtn.disabled = true;
   message.className = 'form-message';
-  message.textContent = 'Sending...';
+  message.textContent = t('forgot.sending');
 
   const redirectTo = new URL('reset.html', window.location.href).href;
   const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo });
@@ -21,10 +21,11 @@ sendBtn.addEventListener('click', async () => {
   sendBtn.disabled = false;
 
   if (error) {
-    message.textContent = 'Could not send the email: ' + error.message;
+    const limited = error.status === 429 || error.code === 'over_email_send_rate_limit';
+    message.textContent = t(limited ? 'forgot.rate_limited' : 'forgot.failed');
     return;
   }
 
   message.className = 'form-message ok';
-  message.textContent = 'If an account exists for this email, a reset link has been sent.';
+  message.textContent = t('forgot.sent');
 });

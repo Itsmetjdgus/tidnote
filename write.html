@@ -17,22 +17,22 @@
     </header>
 
     <main>
-        <h2 id="write-heading">New Post</h2>
-       <p class="notice">Posts are visible to everyone who visits this site. Please do not share information that could identify you or other people. This site is not a counseling or emergency service, and we cannot promise that anyone will respond. If you are struggling, see <a href="help.html">Help</a>.</p>
-       <p id="privacy-note" class="state-message"></p>
-       <form class="write-form">
-    <label for="title">Title</label>
-    <input type="text" id="title" placeholder="Enter title" maxlength="100">
+        <h2 id="write-heading" data-i18n="write.heading_new"></h2>
+        <p class="notice"><span data-i18n="write.notice"></span> <span data-i18n="write.notice_lead"></span><a href="help.html" data-i18n="footer.help"></a><span data-i18n="write.notice_end"></span></p>
+        <p id="privacy-note" class="state-message"></p>
+        <form class="write-form">
+            <label for="title" data-i18n="write.label_title"></label>
+            <input type="text" id="title" data-i18n-placeholder="write.ph_title" maxlength="100">
 
-    <label for="content">Content</label>
-    <textarea id="content" rows="10" placeholder="Write your post" maxlength="20000"></textarea>
-    
-    <label for="image">Cover image (optional, JPG/PNG/WEBP, up to 15MB, auto-resized)</label>
-<input type="file" id="image" accept="image/png,image/jpeg,image/webp">
+            <label for="content" data-i18n="write.label_content"></label>
+            <textarea id="content" rows="10" data-i18n-placeholder="write.ph_content" maxlength="20000"></textarea>
 
-    <button type="button" id="publish-btn">Publish</button>
-    <p id="write-message" class="form-message"></p>
-</form>
+            <label for="image" data-i18n="write.label_image"></label>
+            <input type="file" id="image" accept="image/png,image/jpeg,image/webp">
+
+            <button type="button" id="publish-btn" data-i18n="write.publish"></button>
+            <p id="write-message" class="form-message"></p>
+        </form>
     </main>
 
     <footer>

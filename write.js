@@ -21,8 +21,10 @@
   let oldImagePath = null;
 
   if (editId) {
-    heading.textContent = 'Edit Post';
-    button.textContent = 'Save changes';
+    heading.dataset.i18n = 'write.heading_edit';
+    heading.textContent = t('write.heading_edit');
+    button.dataset.i18n = 'write.save_changes';
+    button.textContent = t('write.save_changes');
 
     const { data: post, error } = await db
       .from('posts')
@@ -31,7 +33,7 @@
       .maybeSingle();
 
     if (error || !post || post.author_id !== session.user.id) {
-      message.textContent = 'You cannot edit this post.';
+      message.textContent = t('write.cannot_edit');
       button.disabled = true;
       return;
     }
@@ -46,28 +48,28 @@
     const content = contentInput.value.trim();
 
     if (!title || !content) {
-      message.textContent = 'Please enter both title and content.';
+      message.textContent = t('write.need_both');
       return;
     }
 
     const file = imageInput.files[0];
     if (file) {
       if (!TYPES[file.type]) {
-        message.textContent = 'Only JPG, PNG, and WEBP images are allowed.';
+        message.textContent = t('profile.photo_type');
         return;
       }
       if (file.size > MAX_INPUT_SIZE) {
-        message.textContent = 'Image must be 15MB or smaller.';
+        message.textContent = t('profile.photo_size');
         return;
       }
     }
 
     button.disabled = true;
-    message.textContent = 'Saving...';
+    message.textContent = t('write.saving');
 
      let newImagePath = null;
     if (file) {
-      message.textContent = 'Processing image...';
+      message.textContent = t('write.processing');
 
       let resized;
       try {
@@ -77,7 +79,7 @@
       }
 
       if (!resized) {
-        message.textContent = 'Could not process this image. Try another one.';
+        message.textContent = t('profile.photo_failed');
         button.disabled = false;
         return;
       }
@@ -91,7 +93,7 @@
         .upload(newImagePath, resized, { contentType: 'image/jpeg' });
 
       if (uploadError) {
-        message.textContent = 'Image upload failed: ' + uploadError.message;
+        message.textContent = t('profile.photo_failed');
         button.disabled = false;
         return;
       }
@@ -122,7 +124,10 @@
       if (newImagePath) {
         await db.storage.from('post-images').remove([newImagePath]);
       }
-      message.textContent = 'Failed to save.' + (error ? ' ' + error.message : '');
+      message.textContent =
+        error && error.message && error.message.includes('Too many')
+          ? t('write.too_many')
+          : t('write.failed');
       button.disabled = false;
       return;
     }

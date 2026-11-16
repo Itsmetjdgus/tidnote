@@ -5,7 +5,7 @@ function createReportControl(targetType, targetId) {
   const toggle = document.createElement('button');
   toggle.type = 'button';
   toggle.className = 'link-danger';
-  toggle.textContent = 'Report';
+  toggle.textContent = t('report.btn');
 
   const form = document.createElement('div');
   form.className = 'report-form';
@@ -13,12 +13,12 @@ function createReportControl(targetType, targetId) {
 
   const select = document.createElement('select');
   [
-    ['spam', 'Spam or advertising'],
-    ['harassment', 'Harassment or hate'],
-    ['privacy', 'Privacy violation'],
-    ['illegal', 'Illegal content'],
-    ['self_harm', 'Self-harm or suicide concern'],
-    ['other', 'Other'],
+    ['spam', t('report.r_spam')],
+    ['harassment', t('report.r_harassment')],
+    ['privacy', t('report.r_privacy')],
+    ['illegal', t('report.r_illegal')],
+    ['self_harm', t('report.r_self_harm')],
+    ['other', t('report.r_other')],
   ].forEach(([value, label]) => {
     const option = document.createElement('option');
     option.value = value;
@@ -29,11 +29,11 @@ function createReportControl(targetType, targetId) {
   const details = document.createElement('textarea');
   details.rows = 2;
   details.maxLength = 500;
-  details.placeholder = 'Details (optional)';
+  details.placeholder = t('report.details');
 
   const submit = document.createElement('button');
   submit.type = 'button';
-  submit.textContent = 'Send report';
+  submit.textContent = t('report.send');
 
   const message = document.createElement('p');
   message.className = 'form-message';
@@ -64,23 +64,23 @@ function createReportControl(targetType, targetId) {
 
     if (error) {
       if (error.code === '23505') {
-        message.textContent = 'You have already reported this.';
+        message.textContent = t('report.duplicate');
       } else if (error.message.includes('Too many')) {
-        message.textContent = error.message;
+        message.textContent = t('report.too_many');
       } else {
-        message.textContent = 'Failed to send the report.';
+        message.textContent = t('report.failed');
       }
       return;
     }
 
      message.className = 'form-message ok';
-    message.textContent = 'Thank you. We will review it.';
+    message.textContent = t('report.thanks');
 
     if (select.value === 'self_harm') {
-      message.append(' If someone may be in immediate danger, contact local emergency services now. ');
+      message.append(' ' + t('report.danger') + ' ');
       const helpLink = document.createElement('a');
       helpLink.href = 'help.html';
-      helpLink.textContent = 'See Help.';
+      helpLink.textContent = t('report.see_help');
       message.append(helpLink);
     }
 
