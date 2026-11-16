@@ -71,10 +71,10 @@ function renderPostCard(post, showAuthor) {
 
   const date = document.createElement('p');
   date.className = 'date';
-  let dateText = new Date(post.created_at).toLocaleDateString('ko-KR');
+  let dateText = new Date(post.created_at).toLocaleDateString(dateLocale());
   if (showAuthor) {
-    const name = post.profiles && post.profiles.nickname ? post.profiles.nickname : 'Anonymous';
-    dateText += ' · by ' + name;
+    const name = post.profiles && post.profiles.nickname ? post.profiles.nickname : t('post.anonymous');
+    dateText += ' · ' + t('post.by_label') + name;
   }
   date.textContent = dateText;
 

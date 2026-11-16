@@ -10,7 +10,10 @@ async function loadPosts() {
   const page = Math.max(1, parseInt(params.get('page'), 10) || 1);
 
   const searchInput = document.getElementById('search-input');
-  if (searchInput) searchInput.value = rawQuery;
+  if (searchInput) {
+    searchInput.value = rawQuery;
+    searchInput.placeholder = t('blog.search_ph');
+  }
 
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -32,14 +35,14 @@ async function loadPosts() {
 
   if (error) {
     console.error(error);
-    list.textContent = page > 1 ? 'No posts on this page.' : 'Failed to load posts.';
+    list.textContent = page > 1 ? t('blog.no_page') : t('blog.load_failed');
     return;
   }
 
   if (data.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'state-message';
-    empty.textContent = keyword ? 'No posts match your search.' : 'No posts yet.';
+    empty.textContent = keyword ? t('blog.no_match') : t('blog.empty');
     list.append(empty);
     return;
   }
@@ -58,15 +61,15 @@ async function loadPosts() {
   }
 
   const prev = document.createElement('a');
-  prev.textContent = '← Prev';
+  prev.textContent = t('blog.prev');
   if (page > 1) prev.href = pageUrl(page - 1);
   else prev.className = 'disabled';
 
   const info = document.createElement('span');
-  info.textContent = 'Page ' + page + ' of ' + totalPages;
+  info.textContent = t('blog.page_of', { page: page, total: totalPages });
 
   const next = document.createElement('a');
-  next.textContent = 'Next →';
+  next.textContent = t('blog.next');
   if (page < totalPages) next.href = pageUrl(page + 1);
   else next.className = 'disabled';
 

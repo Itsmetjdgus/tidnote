@@ -18,12 +18,12 @@
 
    <main>
         <form class="search-form" action="blog.html" method="get">
-            <input type="search" id="search-input" name="q" maxlength="50" placeholder="Search posts">
-            <button type="submit">Search</button>
+            <input type="search" id="search-input" name="q" maxlength="50">
+            <button type="submit" data-i18n="blog.search_btn"></button>
         </form>
 
         <div id="post-list">
-            <p>Loading...</p>
+            <p data-i18n="common.loading"></p>
         </div>
 
         <div id="pager" class="pager"></div>
@@ -35,6 +35,7 @@
 
    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase.js"></script>
+    <script src="i18n.js"></script>
     <script src="nav.js"></script>
     <script src="render.js"></script>
     <script src="blog.js"></script>

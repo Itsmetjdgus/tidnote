@@ -6,7 +6,7 @@
 
   if (data.session) {
     cta.href = 'write.html';
-    cta.textContent = 'Write a post';
+    cta.textContent = t('home.write_post');
   } else {
     cta.addEventListener('click', function (event) {
       event.preventDefault();

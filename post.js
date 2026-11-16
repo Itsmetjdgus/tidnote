@@ -3,7 +3,7 @@
   const id = Number(new URLSearchParams(window.location.search).get('id'));
 
   if (!id) {
-    box.textContent = 'Post not found.';
+    box.textContent = t('post.not_found');
     return;
   }
 
@@ -14,7 +14,7 @@
     .maybeSingle();
 
   if (error || !post) {
-    box.textContent = 'Post not found.';
+    box.textContent = t('post.not_found');
     return;
   }
 
@@ -32,18 +32,18 @@
 
   const date = document.createElement('p');
   date.className = 'date';
-  date.textContent = new Date(post.created_at).toLocaleDateString('ko-KR');
+  date.textContent = new Date(post.created_at).toLocaleDateString(dateLocale());
 
     const author = document.createElement('p');
   author.className = 'date';
-  author.append('by ');
+  author.append(t('post.by_label'));
   if (post.author_id && post.profiles) {
     const authorLink = document.createElement('a');
     authorLink.href = 'author.html?id=' + post.author_id;
     authorLink.textContent = post.profiles.nickname;
     author.append(authorLink);
   } else {
-    author.append('Anonymous');
+    author.append(t('post.anonymous'));
   }
 
   const body = document.createElement('p');
@@ -70,15 +70,15 @@
 
     const editLink = document.createElement('a');
     editLink.href = 'write.html?id=' + post.id;
-    editLink.textContent = 'Edit';
+    editLink.textContent = t('post.edit');
 
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
     deleteBtn.className = 'danger';
-    deleteBtn.textContent = 'Delete';
+    deleteBtn.textContent = t('post.delete');
 
     deleteBtn.addEventListener('click', async () => {
-      if (!confirm('Delete this post? This cannot be undone.')) return;
+      if (!confirm(t('post.confirm_delete'))) return;
       deleteBtn.disabled = true;
 
       const { data: deleted, error: deleteError } = await db
@@ -88,7 +88,7 @@
         .select('id');
 
       if (deleteError || !deleted || deleted.length === 0) {
-        alert('Failed to delete the post.');
+        alert(t('post.delete_failed'));
         deleteBtn.disabled = false;
         return;
       }
@@ -110,7 +110,7 @@
 
   const back = document.createElement('a');
   back.href = 'blog.html';
-  back.textContent = 'Back to list';
+  back.textContent = t('post.back');
   article.append(back);
 
   box.innerHTML = '';

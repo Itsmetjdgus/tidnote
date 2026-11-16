@@ -28,16 +28,16 @@
     list.innerHTML = '';
 
     if (error) {
-      list.textContent = 'Failed to load comments.';
+      list.textContent = t('comments.load_failed');
       return;
     }
 
-    heading.textContent = 'Comments (' + data.length + ')';
+    heading.textContent = t('comments.heading', { n: data.length });
 
     if (data.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'state-message';
-      empty.textContent = 'No comments yet.';
+      empty.textContent = t('comments.empty');
       list.append(empty);
       return;
     }
@@ -54,9 +54,9 @@
 
     const authorLink = document.createElement('a');
     authorLink.href = 'author.html?id=' + comment.author_id;
-    authorLink.textContent = comment.profiles ? comment.profiles.nickname : 'Unknown';
+    authorLink.textContent = comment.profiles ? comment.profiles.nickname : t('comments.unknown');
 
-    meta.append(authorLink, ' · ' + new Date(comment.created_at).toLocaleString('ko-KR'));
+    meta.append(authorLink, ' · ' + new Date(comment.created_at).toLocaleString(dateLocale()));
 
     const body = document.createElement('p');
     body.className = 'post-content';
@@ -68,10 +68,10 @@
       const del = document.createElement('button');
       del.type = 'button';
       del.className = 'link-danger';
-      del.textContent = 'Delete';
+      del.textContent = t('comments.delete');
 
       del.addEventListener('click', async () => {
-        if (!confirm('Delete this comment?')) return;
+        if (!confirm(t('comments.confirm_delete'))) return;
         del.disabled = true;
 
         const { data: deleted, error: deleteError } = await db
@@ -81,7 +81,7 @@
           .select('id');
 
         if (deleteError || !deleted || deleted.length === 0) {
-          alert('Failed to delete the comment.');
+          alert(t('comments.delete_failed'));
           del.disabled = false;
           return;
         }
@@ -106,11 +106,11 @@
     const textarea = document.createElement('textarea');
     textarea.rows = 3;
     textarea.maxLength = 1000;
-    textarea.placeholder = 'Write a comment';
+    textarea.placeholder = t('comments.placeholder');
 
     const button = document.createElement('button');
     button.type = 'button';
-    button.textContent = 'Post comment';
+    button.textContent = t('comments.post_btn');
 
     const message = document.createElement('p');
     message.className = 'form-message';
@@ -119,7 +119,7 @@
       const content = textarea.value.trim();
 
       if (!content) {
-        message.textContent = 'Please write something.';
+        message.textContent = t('comments.need_text');
         return;
       }
 
@@ -133,7 +133,7 @@
       button.disabled = false;
 
       if (error) {
-        message.textContent = 'Failed to post: ' + error.message;
+        message.textContent = t('comments.post_failed');
         return;
       }
 
@@ -149,9 +149,9 @@
 
     const loginLink = document.createElement('a');
     loginLink.href = 'login.html';
-    loginLink.textContent = 'Log in';
+    loginLink.textContent = t('comments.login_link');
 
-    note.append(loginLink, ' to leave a comment.');
+    note.append(loginLink, t('comments.login_tail'));
     section.append(note);
   }
 

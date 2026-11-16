@@ -20,6 +20,11 @@ async function openSignup() {
   }
 }
 
+// 번역 도우미(t)가 없는 환경에서도 영어 문구로 동작하게 한다
+function tt(key, fallback, vars) {
+  return typeof t === 'function' ? t(key, vars) : fallback;
+}
+
 async function renderNav() {
   const nav = document.getElementById('main-nav');
   if (!nav) return;
@@ -28,14 +33,14 @@ async function renderNav() {
   const loggedIn = !!data.session;
 
   const links = [
-    { text: 'Home', href: 'index.html' },
-    { text: 'Posts', href: 'blog.html' },
-    { text: 'People', href: 'people.html' },
+    { text: tt('nav.home', 'Home'), href: 'index.html' },
+    { text: tt('nav.posts', 'Posts'), href: 'blog.html' },
+    { text: tt('nav.people', 'People'), href: 'people.html' },
   ];
 
   if (loggedIn) {
-    links.push({ text: 'Write', href: 'write.html' });
-    links.push({ text: 'My Blog', href: 'author.html?id=' + data.session.user.id });
+    links.push({ text: tt('nav.write', 'Write'), href: 'write.html' });
+    links.push({ text: tt('nav.myblog', 'My Blog'), href: 'author.html?id=' + data.session.user.id });
 
     const { count: pendingCount } = await db
       .from('follows')
@@ -43,13 +48,13 @@ async function renderNav() {
       .eq('following_id', data.session.user.id)
       .eq('status', 'pending');
     if (pendingCount > 0) {
-      links.push({ text: 'Requests (' + pendingCount + ')', href: 'connections.html?tab=requests' });
+      links.push({ text: tt('nav.requests', 'Requests (' + pendingCount + ')', { n: pendingCount }), href: 'connections.html?tab=requests' });
     }
 
-    links.push({ text: 'Settings', href: 'settings.html' });
+    links.push({ text: tt('nav.settings', 'Settings'), href: 'settings.html' });
   } else {
-    links.push({ text: 'Login', href: 'login.html' });
-    links.push({ text: 'Sign up', href: 'login.html', onClick: openSignup });
+    links.push({ text: tt('nav.login', 'Login'), href: 'login.html' });
+    links.push({ text: tt('nav.signup', 'Sign up'), href: 'login.html', onClick: openSignup });
   }
 
   nav.innerHTML = '';
@@ -70,7 +75,7 @@ async function renderNav() {
 
   if (loggedIn) {
     const logout = document.createElement('a');
-    logout.textContent = 'Logout';
+    logout.textContent = tt('nav.logout', 'Logout');
     logout.href = '#';
     logout.addEventListener('click', async (event) => {
       event.preventDefault();
@@ -91,10 +96,10 @@ function renderFooter() {
   links.className = 'footer-links';
 
   [
-    { text: 'Terms', href: 'terms.html' },
-    { text: 'Privacy', href: 'privacy.html' },
-    { text: 'Report', href: 'report.html' },
-    { text: 'Help', href: 'help.html' },
+    { text: tt('footer.terms', 'Terms'), href: 'terms.html' },
+    { text: tt('footer.privacy', 'Privacy'), href: 'privacy.html' },
+    { text: tt('footer.report', 'Report'), href: 'report.html' },
+    { text: tt('footer.help', 'Help'), href: 'help.html' },
   ].forEach((item, index) => {
     if (index > 0) links.append(' · ');
     const a = document.createElement('a');
