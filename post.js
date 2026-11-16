@@ -1,6 +1,7 @@
 (async function () {
   const box = document.getElementById('post-detail');
   const id = Number(new URLSearchParams(window.location.search).get('id'));
+  document.title = t('title.post');
 
   if (!id) {
     box.textContent = t('post.not_found');
@@ -18,7 +19,7 @@
     return;
   }
 
-  document.title = post.title;
+    document.title = post.title + ' - Tidnote';
 
   const { data: sessionData } = await db.auth.getSession();
   const session = sessionData.session;

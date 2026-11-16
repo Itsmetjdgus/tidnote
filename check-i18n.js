@@ -44,7 +44,7 @@ fs.readdirSync('.').filter(function (f) {
   const patterns = [
     /\bt\('([a-zA-Z0-9_.]+)'/g,
     /\btt\('([a-zA-Z0-9_.]+)'/g,
-    /data-i18n="([a-zA-Z0-9_.]+)"/g,
+    /data-i18n(?:-[a-z-]+)?="([a-zA-Z0-9_.]+)"/g,
   ];
   patterns.forEach(function (re) {
     let m;
@@ -119,6 +119,53 @@ report('코드에서 쓰는데 사전에 없는 키',
   const n2 = (r.match(/<ul id="notices-ko">([\s\S]*?)<\/ul>/) || [])[1] || '';
   if (count(n1, /<li>/g) !== count(n2, /<li>/g)) list.push('report.html: 조치 공지 목록의 영어/한국어 항목 수가 다름');
   report('약관·개인정보·신고·도움말 영어/한국어 불일치', list);
+})();
+
+// 4) 번역하지 않은 하드코딩 문구 탐지 (JS)
+(function () {
+  const allow = ['Tidnote'];
+  const list = [];
+  fs.readdirSync('.').filter(function (f) {
+    return /\.js$/.test(f) && f !== 'i18n.js' && f !== 'check-i18n.js';
+  }).forEach(function (f) {
+    fs.readFileSync(f, 'utf8').split('\n').forEach(function (line, i) {
+      const re = /(?:textContent|innerText|placeholder)\s*=\s*(['"`])([^'"`]*)\1|\b(?:alert|confirm)\(\s*(['"`])([^'"`]*)\3/g;
+      let m;
+      while ((m = re.exec(line)) !== null) {
+        const text = m[2] !== undefined ? m[2] : m[4];
+        if (!/[A-Za-z가-힣]{2,}/.test(text)) continue;
+        if (allow.indexOf(text.trim()) !== -1) continue;
+        list.push(f + ':' + (i + 1) + '  ' + line.trim());
+      }
+    });
+  });
+  report('번역하지 않고 직접 쓴 문구(JS)', list);
+})();
+
+// 5) HTML: 제목(<title>)과 화면 문구에 data-i18n 이 빠진 곳
+(function () {
+  const legal = ['terms.html', 'privacy.html', 'report.html', 'help.html'];
+  const titleFree = ['index.html', 'post.html', 'author.html']; // 제목이 고정이거나 JS가 정함
+  const allow = ['Tidnote', '한국어', 'English'];
+  const list = [];
+  fs.readdirSync('.').filter(function (f) { return /\.html$/.test(f); }).forEach(function (f) {
+    const html = fs.readFileSync(f, 'utf8');
+    if (titleFree.indexOf(f) === -1 && !/<title data-i18n="[^"]+"/.test(html)) {
+      list.push(f + ': <title> 에 data-i18n 이 없음');
+    }
+    if (legal.indexOf(f) !== -1) return;
+    const body = html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '');
+    const re = /<(h[1-6]|p|button|label|a|span|li|option|strong|th|td|legend|summary)\b([^>]*)>([^<]*)</g;
+    let m;
+    while ((m = re.exec(body)) !== null) {
+      const text = m[3].trim();
+      if (!/[A-Za-z가-힣]{2,}/.test(text)) continue;
+      if (allow.indexOf(text) !== -1) continue;
+      if (/data-i18n/.test(m[2])) continue;
+      list.push(f + ': <' + m[1] + '> ' + text.slice(0, 40));
+    }
+  });
+  report('번역 표시(data-i18n)가 없는 HTML 문구', list);
 })();
 
 console.log('\nko ' + ko.length + '개 / en ' + en.length + '개');

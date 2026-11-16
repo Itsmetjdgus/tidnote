@@ -284,6 +284,23 @@ const I18N = {
     'reset.ph_new': '8자 이상',
     'notfound.msg': '페이지를 찾을 수 없습니다.',
     'notfound.back': '글 목록으로',
+    'title.notfound': '페이지를 찾을 수 없음 - Tidnote',
+    'title.posts': '글 목록 - Tidnote',
+    'title.people': '사람 - Tidnote',
+    'title.connections': '연결 - Tidnote',
+    'title.forgot': '비밀번호 찾기 - Tidnote',
+    'title.login': '로그인 - Tidnote',
+    'title.reset': '비밀번호 재설정 - Tidnote',
+    'title.settings': '설정 - Tidnote',
+    'title.write': '글쓰기 - Tidnote',
+    'title.terms': '이용약관 - Tidnote',
+    'title.privacy': '개인정보처리방침 - Tidnote',
+    'title.report': '신고 - Tidnote',
+    'title.help': '도움말 - Tidnote',
+    'title.post': '글 - Tidnote',
+    'title.author': '블로그 - Tidnote',
+    'meta.description': '일상이나 생각을 글과 사진으로 기록하세요. 독자는 댓글로 반응할 수 있습니다.',
+    'settings.menu_label': '설정 메뉴',
   },
   en: {
     'profile.posts_of': "{name}'s posts",
@@ -569,6 +586,23 @@ const I18N = {
     'reset.ph_new': 'At least 8 characters',
     'notfound.msg': 'Page not found.',
     'notfound.back': 'Back to posts',
+    'title.notfound': 'Page not found - Tidnote',
+    'title.posts': 'Posts - Tidnote',
+    'title.people': 'People - Tidnote',
+    'title.connections': 'Connections - Tidnote',
+    'title.forgot': 'Forgot password - Tidnote',
+    'title.login': 'Log in - Tidnote',
+    'title.reset': 'Reset password - Tidnote',
+    'title.settings': 'Settings - Tidnote',
+    'title.write': 'Write - Tidnote',
+    'title.terms': 'Terms - Tidnote',
+    'title.privacy': 'Privacy - Tidnote',
+    'title.report': 'Report - Tidnote',
+    'title.help': 'Help - Tidnote',
+    'title.post': 'Post - Tidnote',
+    'title.author': 'Blog - Tidnote',
+    'meta.description': "Write about your day or what's on your mind, with words or a photo. Readers can respond in the comments.",
+    'settings.menu_label': 'Settings menu',
 
   }
 };
@@ -607,6 +641,13 @@ function applyI18n() {
   // 입력창 안내 문구(placeholder)는 data-i18n-placeholder 로 지정한다
   document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
     el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+    // 메타 설명(content)과 접근성 이름(aria-label)
+  document.querySelectorAll('[data-i18n-content]').forEach(function (el) {
+    el.setAttribute('content', t(el.dataset.i18nContent));
+  });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(function (el) {
+    el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel));
   });
 }
 

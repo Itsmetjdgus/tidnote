@@ -2,6 +2,7 @@
   const header = document.getElementById('author-header');
   const list = document.getElementById('author-posts');
   const authorId = new URLSearchParams(window.location.search).get('id');
+    document.title = t('title.author');
 
   if (!authorId) {
     header.textContent = t('profile.not_found');
