@@ -201,7 +201,7 @@ function showSignupModal() {
 
     if (data.session) {
       if (onLoginPage) {
-        window.location.href = 'blog.html';
+        window.location.href = 'index.html';
       } else {
         window.location.reload();
       }

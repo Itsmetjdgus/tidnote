@@ -52,7 +52,7 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
     return;
   }
 
-  window.location.href = 'blog.html';
+  window.location.href = 'index.html';
 });
 
 document.getElementById('open-signup-btn').addEventListener('click', openSignup);

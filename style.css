@@ -850,3 +850,23 @@ header {
 @media (prefers-reduced-motion: reduce) {
   .modal-overlay { animation: none; }
 }
+
+/* 38일차: 홈 화면 안내 띠(베타 표시 + 한 줄 안내) */
+.home-note {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--main-color);
+  color: var(--header-text);
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.home-note .badge {
+  margin: 0 8px 0 0;
+  padding: 1px 9px;
+  font-size: 12px;
+  vertical-align: 1px;
+}

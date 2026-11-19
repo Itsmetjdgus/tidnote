@@ -59,7 +59,7 @@
     message.textContent = t('reset.done');
 
     setTimeout(() => {
-      window.location.href = 'blog.html';
+      window.location.href = 'index.html';
     }, 1500);
   });
 })();

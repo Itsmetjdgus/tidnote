@@ -98,7 +98,7 @@
         await db.storage.from('post-images').remove([post.image_path]);
       }
 
-      window.location.href = 'blog.html';
+      window.location.href = 'index.html';
     });
 
     actions.append(editLink, deleteBtn);
@@ -110,7 +110,7 @@
   }
 
   const back = document.createElement('a');
-  back.href = 'blog.html';
+  back.href = 'index.html';
   back.textContent = t('post.back');
   article.append(back);
 

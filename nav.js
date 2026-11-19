@@ -33,8 +33,6 @@ async function renderNav() {
   const loggedIn = !!data.session;
 
   const links = [
-    { text: tt('nav.home', 'Home'), href: 'index.html' },
-    { text: tt('nav.posts', 'Posts'), href: 'blog.html' },
     { text: tt('nav.people', 'People'), href: 'people.html' },
   ];
 
