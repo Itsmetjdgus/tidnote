@@ -310,6 +310,7 @@ const I18N = {
     'login.resend': '인증 메일 다시 보내기',
     'login.resent': '인증 메일을 다시 보냈습니다. 스팸함도 확인해 주세요.',
     'login.resend_failed': '메일을 보내지 못했습니다. 잠시 후 다시 시도해 주세요.',
+    'login.write_hint': '글을 쓰려면 로그인해 주세요.',
   },
   en: {
     'profile.posts_of': "{name}'s posts",
@@ -621,6 +622,7 @@ const I18N = {
     'login.resend': 'Resend confirmation email',
     'login.resent': 'We sent the confirmation email again. Please check your spam folder too.',
     'login.resend_failed': 'Could not send the email. Please try again in a moment.',
+    'login.write_hint': 'Please log in to write.',
 
   }
 };

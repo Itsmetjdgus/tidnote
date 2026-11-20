@@ -20,6 +20,42 @@ async function openSignup() {
   }
 }
 
+// 로그인 창 열기. next 가 있으면 로그인한 뒤 그 주소로 가고, 없으면 지금 화면을 새로고침한다.
+// 로그인 화면(login.html)에서는 창을 또 띄우지 않고 이메일 칸으로 커서만 옮긴다.
+async function openLogin(next) {
+  if (window.location.pathname.endsWith('login.html')) {
+    const emailInput = document.getElementById('email');
+    if (emailInput) emailInput.focus();
+    return;
+  }
+  try {
+    if (typeof t !== 'function') await loadScript('i18n.js');
+    if (typeof showLoginModal !== 'function') await loadScript('login-modal.js');
+    showLoginModal(next);
+  } catch (e) {
+    window.location.href = 'login.html';
+  }
+}
+
+// 창(모달)을 닫을 때 서서히 사라지게 한 뒤 지운다. 기기의 "동작 줄이기" 설정이 켜져 있으면 바로 지운다.
+function removeOverlay(overlay, done) {
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let finished = false;
+  function end() {
+    if (finished) return;
+    finished = true;
+    overlay.remove();
+    if (done) done();
+  }
+  if (reduce) {
+    end();
+    return;
+  }
+  overlay.classList.add('closing');
+  overlay.addEventListener('animationend', end);
+  setTimeout(end, 300);
+}
+
 // 번역 도우미(t)가 없는 환경에서도 영어 문구로 동작하게 한다
 function tt(key, fallback, vars) {
   return typeof t === 'function' ? t(key, vars) : fallback;
@@ -214,14 +250,27 @@ async function renderNav() {
 
   nav.innerHTML = '';
 
-  // 글쓰기 아이콘은 로그인 여부와 관계없이 보인다. (로그아웃 상태에서는 write.js가 로그인 화면으로 보낸다)
-  nav.append(makeIconLink('write.html', 'pen', tt('nav.write', 'Write')));
+  // 글쓰기 아이콘은 로그인 여부와 관계없이 보인다.
+  // 로그아웃 상태에서 누르면 로그인 창이 뜨고, 로그인하면 글쓰기 화면으로 간다.
+  // (주소를 직접 입력해 들어온 경우는 write.js가 로그인 화면으로 보낸다)
+  const writeLink = makeIconLink('write.html', 'pen', tt('nav.write', 'Write'));
+  if (!session) {
+    writeLink.addEventListener('click', function (event) {
+      event.preventDefault();
+      openLogin('write.html');
+    });
+  }
+  nav.append(writeLink);
 
   if (!session) {
     const login = document.createElement('a');
     login.className = 'nav-link';
     login.href = 'login.html';
     login.textContent = tt('nav.login', 'Login');
+    login.addEventListener('click', function (event) {
+      event.preventDefault();
+      openLogin();
+    });
     nav.append(login);
 
     const signup = document.createElement('a');

@@ -848,8 +848,23 @@ header {
   to { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .modal-overlay { animation: none; }
+  .modal-overlay,
+  .modal-overlay.closing { animation: none; }
 }
+
+/* 39일차: 창이 닫힐 때 서서히 사라지기 */
+.modal-overlay.closing {
+  animation: modal-fade-out 0.15s ease-in forwards;
+  pointer-events: none;
+}
+@keyframes modal-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* 39일차: 로그인 창에서 비어 있는 안내 줄이 간격을 만들지 않게 */
+.modal .form-message { margin: 0; }
+.modal .form-message:empty { display: none; }
 
 /* 38일차: 홈 화면 안내 띠(베타 표시 + 한 줄 안내) */
 .home-note {

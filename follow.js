@@ -152,6 +152,10 @@
       link.className = 'follow-btn';
       link.href = 'login.html';
       link.textContent = t('follow.login');
+      link.addEventListener('click', function (event) {
+        event.preventDefault();
+        openLogin();
+      });
       row.append(link);
     } else if (followStatus === 'accepted') {
       row.append(makeButton(t('follow.following'), true, () => unfollow(t('conn.confirm_unfollow', { name: profile.nickname }))));

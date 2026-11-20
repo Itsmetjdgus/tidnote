@@ -150,6 +150,10 @@
     const loginLink = document.createElement('a');
     loginLink.href = 'login.html';
     loginLink.textContent = t('comments.login_link');
+    loginLink.addEventListener('click', function (event) {
+      event.preventDefault();
+      openLogin();
+    });
 
     note.append(loginLink, t('comments.login_tail'));
     section.append(note);

@@ -124,14 +124,20 @@ function showSignupModal() {
     const loginLink = document.createElement('a');
     loginLink.href = 'login.html';
     loginLink.textContent = t('signup.login');
+    loginLink.addEventListener('click', function (event) {
+      event.preventDefault();
+      closeModal(function () { openLogin(); });
+    });
     foot.append(loginLink);
   }
 
-  function closeModal() {
+  function closeModal(after) {
     document.removeEventListener('keydown', onKeydown);
     document.body.style.overflow = '';
-    overlay.remove();
-    if (previousFocus && previousFocus.focus) previousFocus.focus();
+    removeOverlay(overlay, function () {
+      if (typeof after === 'function') after();
+      else if (previousFocus && previousFocus.focus) previousFocus.focus();
+    });
   }
 
   function onKeydown(e) {
