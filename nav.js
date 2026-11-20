@@ -67,15 +67,16 @@ const NAV_ICONS = {
   search: [['circle', { cx: 11, cy: 11, r: 6.5 }], ['path', { d: 'M16 16l5 5' }]],
   pen: [['path', { d: 'M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1z' }], ['path', { d: 'M14.5 6.5l3 3' }]],
   user: [['circle', { cx: 12, cy: 8, r: 4 }], ['path', { d: 'M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7' }]],
+  comment: [['path', { d: 'M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4 4v-4H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z' }]],
 };
 
-function navIcon(name) {
+function navIcon(name, size) {
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');
   const attrs = {
     viewBox: '0 0 24 24',
-    width: '22',
-    height: '22',
+    width: String(size || 22),
+    height: String(size || 22),
     fill: 'none',
     stroke: 'currentColor',
     'stroke-width': '2',

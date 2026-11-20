@@ -1,18 +1,19 @@
-// 홈 화면의 글 목록: 최신순, 10개씩, ?q= 검색, ?cat= 카테고리, ?page= 페이지 이동
+// 홈 화면의 글 목록: 최신순, 10개씩, ?q= 검색, ?cat= 카테고리, ?tag= 해시태그, ?page= 페이지 이동
 const PAGE_SIZE = 10;
 
-// 검색어(q)·카테고리(cat)·쪽(page)을 담은 홈 주소를 만든다
-function feedUrl(q, cat, page) {
+// 검색어(q)·카테고리(cat)·해시태그(tag)·쪽(page)을 담은 홈 주소를 만든다
+function feedUrl(q, cat, tag, page) {
   const next = new URLSearchParams();
   if (q) next.set('q', q);
   if (cat) next.set('cat', cat);
+  if (tag) next.set('tag', tag);
   if (page > 1) next.set('page', page);
   const text = next.toString();
   return 'index.html' + (text ? '?' + text : '');
 }
 
-// 목록 위의 카테고리 칩 줄: [전체] + 9개. 검색어는 그대로 두고 카테고리만 바꾼다
-function renderCategoryBar(rawQuery, cat) {
+// 목록 위의 카테고리 칩 줄: [전체] + 9개. 검색어·해시태그는 그대로 두고 카테고리만 바꾼다
+function renderCategoryBar(rawQuery, cat, tag) {
   const bar = document.getElementById('category-bar');
   if (!bar) return;
   bar.innerHTML = '';
@@ -22,7 +23,7 @@ function renderCategoryBar(rawQuery, cat) {
   items.forEach(function (item) {
     const a = document.createElement('a');
     a.className = 'chip';
-    a.href = feedUrl(rawQuery, item[0], 1);
+    a.href = feedUrl(rawQuery, item[0], tag, 1);
     a.textContent = item[1];
     if (item[0] === cat) a.setAttribute('aria-current', 'page');
     bar.append(a);
@@ -31,6 +32,20 @@ function renderCategoryBar(rawQuery, cat) {
   // 좁은 화면에서 줄이 옆으로 밀려 있어도 지금 고른 칩이 보이게 한다
   const active = bar.querySelector('[aria-current]');
   if (active && active.scrollIntoView) active.scrollIntoView({ block: 'nearest', inline: 'center' });
+}
+
+// 해시태그로 보고 있을 때, 목록 위에 "#태그 의 글 · 태그 해제" 줄을 보여 준다
+function renderTagFilter(rawQuery, cat, tag) {
+  const box = document.getElementById('tag-filter');
+  if (!box) return;
+  box.innerHTML = '';
+  box.hidden = !tag;
+  if (!tag) return;
+  box.append(t('tag.filter', { tag: tag }) + ' ');
+  const clear = document.createElement('a');
+  clear.href = feedUrl(rawQuery, cat, '', 1);
+  clear.textContent = t('tag.clear');
+  box.append(clear);
 }
 
 async function loadPosts() {
@@ -42,22 +57,27 @@ async function loadPosts() {
   const keyword = rawQuery.replace(/[%_,()*\\]/g, ' ').trim();
   const rawCat = params.get('cat') || '';
   const cat = isCategory(rawCat) ? rawCat : ''; // 목록에 없는 값은 "전체"로 본다
+  const tag = Array.from((params.get('tag') || '').replace(/[\s#,]/g, '')).slice(0, 20).join('').toLowerCase();
   const page = Math.max(1, parseInt(params.get('page'), 10) || 1);
 
-  renderCategoryBar(rawQuery, cat);
+  renderCategoryBar(rawQuery, cat, tag);
+  renderTagFilter(rawQuery, cat, tag);
 
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
   let query = db
     .from('posts')
-    .select('id, title, content, author_id, created_at, image_path, category, profiles(nickname)', { count: 'exact' });
+    .select('id, title, content, author_id, created_at, image_path, category, tags, comments(count), profiles(nickname, avatar_path)', { count: 'exact' });
 
   if (keyword) {
     query = query.or('title.ilike.%' + keyword + '%,content.ilike.%' + keyword + '%');
   }
   if (cat) {
     query = query.eq('category', cat);
+  }
+  if (tag) {
+    query = query.contains('tags', [tag]);
   }
 
   query = query.order('created_at', { ascending: false }).range(from, to);
@@ -76,7 +96,7 @@ async function loadPosts() {
   if (data.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'state-message';
-    empty.textContent = keyword ? t('blog.no_match') : (cat ? t('blog.empty_cat') : t('blog.empty'));
+    empty.textContent = keyword || tag ? t('blog.no_match') : (cat ? t('blog.empty_cat') : t('blog.empty'));
     list.append(empty);
     return;
   }
@@ -88,7 +108,7 @@ async function loadPosts() {
 
   const prev = document.createElement('a');
   prev.textContent = t('blog.prev');
-  if (page > 1) prev.href = feedUrl(rawQuery, cat, page - 1);
+  if (page > 1) prev.href = feedUrl(rawQuery, cat, tag, page - 1);
   else prev.className = 'disabled';
 
   const info = document.createElement('span');
@@ -96,7 +116,7 @@ async function loadPosts() {
 
   const next = document.createElement('a');
   next.textContent = t('blog.next');
-  if (page < totalPages) next.href = feedUrl(rawQuery, cat, page + 1);
+  if (page < totalPages) next.href = feedUrl(rawQuery, cat, tag, page + 1);
   else next.className = 'disabled';
 
   pager.append(prev, info, next);

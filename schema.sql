@@ -667,3 +667,38 @@ create index posts_category_created_idx on posts (category, created_at desc);
 
 -- 4) API가 새 열을 바로 알도록 새로고침
 notify pgrst, 'reload schema';
+
+-- 41일차 (2026-11-21): 글 해시태그
+-- 1) 열 추가. 기존 글은 태그 없음(빈 목록)
+alter table posts add column tags text[] not null default '{}';
+
+-- 2) 규칙: 최대 5개, 각 1~20자, 공백·#·쉼표 금지 (프로그램 오류·조작 방지)
+create or replace function public.validate_post_tags()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  tag text;
+begin
+  if cardinality(new.tags) > 5 then
+    raise exception 'Tag limit exceeded';
+  end if;
+  foreach tag in array new.tags loop
+    if tag is null or char_length(tag) not between 1 and 20 or tag ~ '[\s#,]' then
+      raise exception 'Invalid tag';
+    end if;
+  end loop;
+  return new;
+end;
+$$;
+
+create trigger validate_post_tags_trigger
+  before insert or update on public.posts
+  for each row execute function public.validate_post_tags();
+
+-- 3) 태그로 찾기를 빠르게
+create index posts_tags_idx on posts using gin (tags);
+
+-- 4) API가 새 열을 바로 알도록 새로고침
+notify pgrst, 'reload schema';

@@ -18,6 +18,20 @@
     categoryInput.append(opt);
   });
   categoryInput.value = 'daily';
+
+  const tagsInput = document.getElementById('tags');
+  const removeRow = document.getElementById('remove-image-row');
+  const removeBox = document.getElementById('remove-image');
+
+  // "#여행, 맛집 #카페" -> ['여행', '맛집', '카페'] (#·쉼표·공백으로 나누고, 20자까지, 중복 제거, 영문은 소문자)
+  function parseTags(text) {
+    const out = [];
+    text.split(/[\s,#]+/).forEach(function (raw) {
+      const tag = Array.from(raw).slice(0, 20).join('').toLowerCase();
+      if (tag && out.indexOf(tag) === -1) out.push(tag);
+    });
+    return out;
+  }
   const button = document.getElementById('publish-btn');
   const message = document.getElementById('write-message');
   const heading = document.getElementById('write-heading');
@@ -36,7 +50,7 @@
 
     const { data: post, error } = await db
       .from('posts')
-      .select('id, title, content, author_id, image_path, category')
+      .select('id, title, content, author_id, image_path, category, tags')
       .eq('id', editId)
       .maybeSingle();
 
@@ -49,7 +63,9 @@
     titleInput.value = post.title;
     contentInput.value = post.content;
     categoryInput.value = isCategory(post.category) ? post.category : 'daily';
+    tagsInput.value = Array.isArray(post.tags) ? post.tags.map(function (tag) { return '#' + tag; }).join(' ') : '';
     oldImagePath = post.image_path;
+    if (oldImagePath) removeRow.hidden = false;
   }
 
   button.addEventListener('click', async () => {
@@ -58,6 +74,12 @@
 
     if (!title || !content) {
       message.textContent = t('write.need_both');
+      return;
+    }
+
+    const tags = parseTags(tagsInput.value);
+    if (tags.length > 5) {
+      message.textContent = t('write.tags_too_many');
       return;
     }
 
@@ -108,8 +130,9 @@
       }
     }
 
-    const fields = { title, content, category: categoryInput.value };
+    const fields = { title, content, category: categoryInput.value, tags: tags };
     if (newImagePath) fields.image_path = newImagePath;
+    else if (editId && removeBox.checked && oldImagePath) fields.image_path = null;
 
     let result;
     if (editId) {
@@ -141,7 +164,7 @@
       return;
     }
 
-    if (editId && newImagePath && oldImagePath) {
+    if (editId && oldImagePath && (newImagePath || fields.image_path === null)) {
       await db.storage.from('post-images').remove([oldImagePath]);
     }
 

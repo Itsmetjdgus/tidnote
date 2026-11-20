@@ -10,7 +10,7 @@
 
   const { data: post, error } = await db
     .from('posts')
-    .select('id, title, content, author_id, created_at, image_path, category, profiles(nickname)')
+    .select('id, title, content, author_id, created_at, image_path, category, tags, profiles(nickname)')
     .eq('id', id)
     .maybeSingle();
 
@@ -58,6 +58,20 @@
   body.textContent = post.content;
 
   article.append(h2, date, author);
+
+  if (Array.isArray(post.tags) && post.tags.length > 0) {
+    const tagRow = document.createElement('p');
+    tagRow.className = 'tag-row';
+    tagRow.setAttribute('aria-label', t('post.tags'));
+    post.tags.forEach(function (tag, i) {
+      if (i > 0) tagRow.append(' ');
+      const a = document.createElement('a');
+      a.href = 'index.html?tag=' + encodeURIComponent(tag);
+      a.textContent = '#' + tag;
+      tagRow.append(a);
+    });
+    article.append(tagRow);
+  }
 
   if (post.image_path) {
     const img = document.createElement('img');
