@@ -76,6 +76,9 @@ function renderPostCard(post, showAuthor) {
     const name = post.profiles && post.profiles.nickname ? post.profiles.nickname : t('post.anonymous');
     dateText += ' · ' + t('post.by_label') + name;
   }
+  if (post.category && typeof categoryLabel === 'function') {
+    dateText += ' · ' + categoryLabel(post.category);
+  }
   date.textContent = dateText;
 
   const preview = document.createElement('p');

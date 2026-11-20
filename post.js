@@ -10,7 +10,7 @@
 
   const { data: post, error } = await db
     .from('posts')
-    .select('id, title, content, author_id, created_at, image_path, profiles(nickname)')
+    .select('id, title, content, author_id, created_at, image_path, category, profiles(nickname)')
     .eq('id', id)
     .maybeSingle();
 
@@ -34,6 +34,12 @@
   const date = document.createElement('p');
   date.className = 'date';
   date.textContent = new Date(post.created_at).toLocaleDateString(dateLocale());
+  if (post.category) {
+    const catLink = document.createElement('a');
+    catLink.href = 'index.html?cat=' + encodeURIComponent(post.category);
+    catLink.textContent = categoryLabel(post.category);
+    date.append(' · ', catLink);
+  }
 
     const author = document.createElement('p');
   author.className = 'date';

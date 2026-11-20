@@ -652,3 +652,18 @@ create policy "view post images of viewable authors"
     bucket_id = 'post-images'
     and public.can_view_author(((storage.foldername(name))[1])::uuid)
   );
+
+-- 40일차 (2026-11-21): 글 카테고리
+-- 1) 열 추가. 기존 글은 모두 'daily'(일상·생각)가 된다
+alter table posts add column category text not null default 'daily';
+
+-- 2) 허용하는 9가지 값만 저장 (프로그램 오류·조작 방지)
+alter table posts
+  add constraint posts_category_check
+  check (category in ('daily', 'travel', 'food', 'language', 'it', 'hobby', 'study', 'culture', 'etc'));
+
+-- 3) 카테고리별 최신순 목록을 빠르게
+create index posts_category_created_idx on posts (category, created_at desc);
+
+-- 4) API가 새 열을 바로 알도록 새로고침
+notify pgrst, 'reload schema';

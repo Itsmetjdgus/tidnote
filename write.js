@@ -10,6 +10,14 @@
   const titleInput = document.getElementById('title');
   const contentInput = document.getElementById('content');
   const imageInput = document.getElementById('image');
+  const categoryInput = document.getElementById('category');
+  CATEGORIES.forEach(function (c) {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = categoryLabel(c);
+    categoryInput.append(opt);
+  });
+  categoryInput.value = 'daily';
   const button = document.getElementById('publish-btn');
   const message = document.getElementById('write-message');
   const heading = document.getElementById('write-heading');
@@ -28,7 +36,7 @@
 
     const { data: post, error } = await db
       .from('posts')
-      .select('id, title, content, author_id, image_path')
+      .select('id, title, content, author_id, image_path, category')
       .eq('id', editId)
       .maybeSingle();
 
@@ -40,6 +48,7 @@
 
     titleInput.value = post.title;
     contentInput.value = post.content;
+    categoryInput.value = isCategory(post.category) ? post.category : 'daily';
     oldImagePath = post.image_path;
   }
 
@@ -99,7 +108,7 @@
       }
     }
 
-    const fields = { title, content };
+    const fields = { title, content, category: categoryInput.value };
     if (newImagePath) fields.image_path = newImagePath;
 
     let result;

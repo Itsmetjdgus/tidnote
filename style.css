@@ -866,6 +866,47 @@ header {
 .modal .form-message { margin: 0; }
 .modal .form-message:empty { display: none; }
 
+/* 40일차: 카테고리 칩 줄, 글쓰기 선택칸 */
+.category-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 2px 0 6px;
+}
+@media (max-width: 720px) {
+  /* 좁은 화면: 줄바꿈 대신 옆으로 밀어서 본다 */
+  .category-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+}
+.chip {
+  flex: 0 0 auto;
+  padding: 5px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--header-text);
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.chip:hover { background: var(--main-color); }
+.chip[aria-current="page"] {
+  background: var(--header-text);
+  border-color: var(--header-text);
+  color: #fff;
+}
+.write-form select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 16px;
+}
+
 /* 38일차: 홈 화면 안내 띠(베타 표시 + 한 줄 안내) */
 .home-note {
   margin: 0 0 16px;
