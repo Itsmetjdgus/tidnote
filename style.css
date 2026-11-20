@@ -870,3 +870,258 @@ header {
   font-size: 12px;
   vertical-align: 1px;
 }
+
+/* 38일차: 헤더 3구역 - [로고] [검색창] [글쓰기 아이콘 · 계정] */
+/* 양쪽 칸을 같은 비율(1fr)로 두어, 로그인 여부와 관계없이 검색창이 화면 가운데에 온다 */
+header {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 560px) 1fr;
+  align-items: center;
+  gap: 12px 24px;
+}
+
+header h1 {
+  display: flex;
+  align-items: center;
+}
+
+header nav {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  justify-self: end;
+  white-space: nowrap;
+}
+
+header nav > * {
+  flex: none;
+}
+
+.header-search {
+  display: flex;
+  align-items: center;
+  justify-self: center;
+  width: 100%;
+  max-width: 560px;
+  overflow: hidden;
+  background: white;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+}
+
+.header-search:focus-within {
+  outline: 3px solid var(--header-text);
+  outline-offset: 2px;
+}
+
+.header-search select,
+.header-search input,
+.header-search button {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--header-text);
+}
+
+.header-search select {
+  flex: none;
+  max-width: 8em;
+  padding: 8px 6px 8px 14px;
+  border-right: 1px solid #e5dccb;
+  cursor: pointer;
+}
+
+.header-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+}
+
+.header-search select:focus-visible,
+.header-search input:focus-visible,
+.header-search button:focus-visible {
+  outline: none;
+}
+
+.header-search button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px 6px 8px;
+  cursor: pointer;
+}
+
+.icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--header-text);
+  cursor: pointer;
+}
+
+header a.nav-link {
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+header a.nav-cta {
+  padding: 6px 16px;
+}
+
+.icon-btn:hover,
+header a.nav-link:hover {
+  background: rgba(31, 53, 82, 0.1);
+}
+
+.count-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #b91c1c;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 18px;
+  text-align: center;
+}
+
+.account {
+  position: relative;
+}
+
+.account-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  padding: 6px;
+  background: white;
+  border: 1px solid #e5dccb;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.account-menu a,
+.account-menu button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--header-text);
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.account-menu a:hover,
+.account-menu button:hover {
+  background: var(--main-color);
+}
+
+@media (max-width: 720px) {
+  header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 12px;
+  }
+
+  header h1 {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  header nav {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .header-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    max-width: none;
+  }
+}
+
+/* 작은 폰(폭 360px 안팎)에서도 로고와 메뉴가 한 줄에 겹치지 않게 조금 줄인다 */
+@media (max-width: 480px) {
+  header h1 {
+    font-size: 24px;
+  }
+
+  header .brand {
+    gap: 8px;
+  }
+
+  header .brand img {
+    width: 32px;
+    height: 32px;
+  }
+
+  header nav {
+    gap: 2px;
+  }
+
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  header a.nav-link {
+    padding: 6px 8px;
+  }
+
+  header a.nav-cta {
+    padding: 6px 12px;
+  }
+}
+
+/* 아주 좁은 화면(폭 350px 이하)에서는 로고 그림만 보여 준다 */
+@media (max-width: 350px) {
+  header .brand span {
+    display: none;
+  }
+}
+
+/* 글 목록 카드: 여백을 줄여 한 화면에 더 많이 보이게 한다 */
+.post-link h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+
+.post-link .date {
+  margin: 0 0 8px;
+}
+
+.post-link p {
+  margin: 0;
+}
+
+/* 한글이 단어 한가운데에서 끊기지 않게 하고, 띄어쓰기 없는 아주 긴 글자는 넘치지 않게 줄을 바꾼다 */
+.post-link h2,
+.post-link p {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.post-link .post-thumb {
+  max-height: 220px;
+}

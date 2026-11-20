@@ -1,15 +1,12 @@
 // 닉네임 검색: 부분 일치, 대소문자 무시, 정확히 일치하는 사람을 맨 위로
 (async function () {
   const list = document.getElementById('people-list');
-  const input = document.getElementById('people-input');
   const MAX_SHOWN = 20;
 
   const rawQuery = (new URLSearchParams(location.search).get('q') || '').slice(0, 20);
-  // blog.js와 같은 방식으로 특수문자를 제거한다(% _ 등은 검색 패턴을 깨뜨림)
+  // feed.js와 같은 방식으로 특수문자를 제거한다(% _ 등은 검색 패턴을 깨뜨림)
   const keyword = rawQuery.replace(/[%_,()*\\]/g, ' ').trim();
 
-  input.value = rawQuery;
-  input.placeholder = t('people.placeholder');
   list.textContent = '';
 
   function note(text) {

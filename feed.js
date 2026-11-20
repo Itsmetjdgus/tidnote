@@ -10,12 +10,6 @@ async function loadPosts() {
   const keyword = rawQuery.replace(/[%_,()*\\]/g, ' ').trim();
   const page = Math.max(1, parseInt(params.get('page'), 10) || 1);
 
-  const searchInput = document.getElementById('search-input');
-  if (searchInput) {
-    searchInput.value = rawQuery;
-    searchInput.placeholder = t('blog.search_ph');
-  }
-
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
