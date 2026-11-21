@@ -102,7 +102,7 @@ function renderPostCard(post, showAuthor) {
   h2.textContent = post.title;
 
   const preview = document.createElement('p');
-  preview.textContent = post.content.slice(0, 100);
+  preview.textContent = stripMarkdown(post.content);
 
   text.append(h2, preview);
   main.append(text);

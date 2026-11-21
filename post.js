@@ -53,9 +53,9 @@
     author.append(t('post.anonymous'));
   }
 
-  const body = document.createElement('p');
+  const body = document.createElement('div');
   body.className = 'post-content';
-  body.textContent = post.content;
+  body.append(renderMarkdown(post.content));
 
   article.append(h2, date, author);
 

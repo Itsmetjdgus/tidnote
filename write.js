@@ -19,6 +19,7 @@
   });
   categoryInput.value = 'daily';
 
+  const editor = setupEditor(contentInput);
   const tagsInput = document.getElementById('tags');
   const removeRow = document.getElementById('remove-image-row');
   const removeBox = document.getElementById('remove-image');
@@ -62,6 +63,7 @@
 
     titleInput.value = post.title;
     contentInput.value = post.content;
+    editor.refresh();
     categoryInput.value = isCategory(post.category) ? post.category : 'daily';
     tagsInput.value = Array.isArray(post.tags) ? post.tags.map(function (tag) { return '#' + tag; }).join(' ') : '';
     oldImagePath = post.image_path;
