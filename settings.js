@@ -148,6 +148,23 @@
   const deleteBtn = document.getElementById('delete-account-btn');
   const deleteMessage = document.getElementById('delete-message');
 
+  // 저장소의 내 폴더 파일을 "목록 보기 → 지우기"로 비울 때까지 반복한다.
+  // (폴더 목록은 한 번에 최대 1000개만 돌려주므로, 한 번만 하면 1000개를 넘는 파일이 남는다)
+  // 돌려주는 값: 'ok' 다 지움 / 'list' 목록 실패 / 'remove' 삭제 실패(또는 비정상적으로 많음)
+  async function removeAllFiles(bucket, userId) {
+    for (let round = 0; round < 50; round++) {
+      const { data: files, error: listError } = await db.storage.from(bucket).list(userId, { limit: 1000 });
+      if (listError) return 'list';
+      const objects = (files || []).filter(function (f) { return f.id !== null; });
+      if (objects.length === 0) return 'ok';
+      const { error: removeError } = await db.storage
+        .from(bucket)
+        .remove(objects.map(function (f) { return userId + '/' + f.name; }));
+      if (removeError) return 'remove';
+    }
+    return 'remove';
+  }
+
   deleteForm.addEventListener('submit', async function (event) {
     event.preventDefault();
     deleteMessage.className = 'form-message';
@@ -178,39 +195,25 @@
 
     const userId = session.user.id;
 
-        // 2) 글 이미지 삭제 (내 폴더의 파일을 전부 지운다. 글에 연결되지 않은 파일도 포함)
-    const { data: imageFiles, error: listError } = await db.storage
-      .from('post-images')
-      .list(userId, { limit: 1000 });
-
-    if (listError) {
+    // 2) 글 이미지 삭제 (내 폴더의 파일을 전부 지운다. 글에 연결되지 않은 파일도 포함)
+    const imageResult = await removeAllFiles('post-images', userId);
+    if (imageResult === 'list') {
       deleteMessage.textContent = t('settings.delete_failed');
       deleteBtn.disabled = false;
       return;
     }
-
-    if (imageFiles && imageFiles.length > 0) {
-      const { error: removeError } = await db.storage
-        .from('post-images')
-        .remove(imageFiles.map(function (f) { return userId + '/' + f.name; }));
-      if (removeError) {
-        deleteMessage.textContent = t('settings.delete_images_failed');
-        deleteBtn.disabled = false;
-        return;
-      }
+    if (imageResult === 'remove') {
+      deleteMessage.textContent = t('settings.delete_images_failed');
+      deleteBtn.disabled = false;
+      return;
     }
 
     // 3) 프로필 사진 삭제
-    const { data: avatarFiles } = await db.storage.from('avatars').list(userId);
-    if (avatarFiles && avatarFiles.length > 0) {
-      const { error: avatarRemoveError } = await db.storage
-        .from('avatars')
-        .remove(avatarFiles.map(function (f) { return userId + '/' + f.name; }));
-      if (avatarRemoveError) {
-        deleteMessage.textContent = t('settings.delete_images_failed');
-        deleteBtn.disabled = false;
-        return;
-      }
+    const avatarResult = await removeAllFiles('avatars', userId);
+    if (avatarResult !== 'ok') {
+      deleteMessage.textContent = t('settings.delete_images_failed');
+      deleteBtn.disabled = false;
+      return;
     }
 
     // 4) 계정 삭제

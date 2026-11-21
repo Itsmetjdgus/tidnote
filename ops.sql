@@ -159,3 +159,22 @@ commit;
 
 -- @@9 오래된 삭제·정지 기록 정리(90일): 날짜를 "오늘 - 90일" 로 바꿔서 실행 (예: 오늘이 2027-04-10 이면 '2027-01-10')
 delete from moderation_log where created_at < '2000-01-01';
+
+-- @@10 저장공간 사용량 (무료 플랜 사진 저장 1 GB): 합계가 700 MB 를 넘으면 정리·대책을 생각하세요. 한 달에 한 번 확인
+select bucket_id as 저장소, count(*) as 파일수, round(sum((metadata ->> 'size')::bigint) / 1048576.0, 1) as MB
+  from storage.objects
+ group by bucket_id
+union all
+select '합계', count(*), round(coalesce(sum((metadata ->> 'size')::bigint), 0) / 1048576.0, 1)
+  from storage.objects;
+
+-- @@11 글에 연결되지 않은 사진 찾기 (올리고 글을 저장하지 않은 것 등. 하루 지난 것만, 삭제 기록에 남은 글의 사진은 제외)
+-- 찾은 파일은 SQL 이 아니라 대시보드 → Storage → post-images → 해당 폴더에서 직접 지웁니다(SQL 로 지우면 파일이 남음)
+select o.name as 경로, o.created_at, round(((o.metadata ->> 'size')::bigint) / 1024.0) as KB
+  from storage.objects o
+ where o.bucket_id = 'post-images'
+   and o.created_at < now() - interval '1 day'
+   and not exists (select 1 from posts p where o.name = any (p.images))
+   and not exists (select 1 from moderation_log m where m.action = 'remove_post' and m.snapshot -> 'post' -> 'images' @> to_jsonb(o.name))
+ order by o.created_at
+ limit 50;

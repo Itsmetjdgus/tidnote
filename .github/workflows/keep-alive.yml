@@ -1,0 +1,25 @@
+# 하루에 한 번 Supabase API 를 불러 "활동 없음으로 인한 일시정지"를 막습니다.
+# 아래 주소와 키는 사이트(supabase.js)에 이미 공개된 값입니다(비밀키가 아님). 키를 바꾸면 여기도 같이 바꾸세요.
+# 실패하면(200 이 아니면) GitHub 가 메일로 알려 줍니다. 프로젝트가 멈췄거나 키가 바뀌었다는 신호입니다.
+name: keep-alive
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping Supabase API
+        env:
+          SUPABASE_URL: https://cojnocurzkfxofbmqiqm.supabase.co
+          SUPABASE_KEY: sb_publishable_IS7ZzZbqtgAhShT47bykBQ_yaooRyv1
+        run: |
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 "$SUPABASE_URL/rest/v1/profiles?select=id&limit=1" -H "apikey: $SUPABASE_KEY")
+          echo "HTTP $code"
+          test "$code" = "200"
