@@ -30,12 +30,10 @@
             <label for="content" data-i18n="write.label_content"></label>
             <textarea id="content" rows="14" data-i18n-placeholder="write.ph_content" maxlength="20000"></textarea>
 
-            <label for="image" data-i18n="write.label_image"></label>
-            <input type="file" id="image" accept="image/png,image/jpeg,image/webp">
-            <label class="check" id="remove-image-row" hidden>
-                <input type="checkbox" id="remove-image">
-                <span data-i18n="write.remove_image"></span>
-            </label>
+            <label for="photo-input" data-i18n="write.label_photos"></label>
+            <input type="file" id="photo-input" accept="image/png,image/jpeg,image/webp" multiple>
+            <p class="field-hint" data-i18n="write.photos_hint"></p>
+            <ul id="photo-list" class="photo-list"></ul>
 
             <label for="tags" data-i18n="write.label_tags"></label>
             <input type="text" id="tags" maxlength="150" autocomplete="off" data-i18n-placeholder="write.ph_tags">
@@ -54,6 +52,7 @@
     <script src="i18n.js"></script>
     <script src="nav.js"></script>
     <script src="categories.js"></script>
+    <script src="render.js"></script>
     <script src="markdown.js"></script>
     <script src="editor.js"></script>
     <script src="image.js"></script>

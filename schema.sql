@@ -702,3 +702,41 @@ create index posts_tags_idx on posts using gin (tags);
 
 -- 4) API가 새 열을 바로 알도록 새로고침
 notify pgrst, 'reload schema';
+
+-- 43일차 (2026-11-21): 글 사진 여러 장
+-- 1) 열 추가: 글에 올린 사진 경로 목록 (순서 = 글 속 [사진1], [사진2] 번호)
+alter table posts add column images text[] not null default '{}';
+
+-- 2) 기존 글: 대표 사진 1장을 사진 목록의 첫 장으로 옮김 (화면 모양은 그대로)
+update posts set images = array[image_path] where image_path is not null;
+
+-- 3) 규칙: 최대 10장, 내 폴더의 파일만, 대표 사진은 목록 안의 사진 (프로그램 오류·조작 방지)
+create or replace function public.validate_post_images()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  p text;
+begin
+  if cardinality(new.images) > 10 then
+    raise exception 'Image limit exceeded';
+  end if;
+  foreach p in array new.images loop
+    if p is null or p !~ ('^' || new.author_id::text || '/[A-Za-z0-9._-]{1,100}$') then
+      raise exception 'Invalid image';
+    end if;
+  end loop;
+  if new.image_path is not null and not (new.image_path = any (new.images)) then
+    raise exception 'Invalid cover image';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger validate_post_images_trigger
+  before insert or update on public.posts
+  for each row execute function public.validate_post_images();
+
+-- 4) API가 새 열을 바로 알도록 새로고침
+notify pgrst, 'reload schema';

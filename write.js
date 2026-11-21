@@ -9,7 +9,8 @@
 
   const titleInput = document.getElementById('title');
   const contentInput = document.getElementById('content');
-  const imageInput = document.getElementById('image');
+  const photoInput = document.getElementById('photo-input');
+  const photoList = document.getElementById('photo-list');
   const categoryInput = document.getElementById('category');
   CATEGORIES.forEach(function (c) {
     const opt = document.createElement('option');
@@ -19,10 +20,19 @@
   });
   categoryInput.value = 'daily';
 
-  const editor = setupEditor(contentInput);
+  // ---- 사진 목록 상태 ----
+  // photos[i] 가 글 속 [사진(i+1)] 이다. path: 이미 올라가 있는 파일 / blob: 아직 올리지 않은(크기를 줄여 둔) 파일
+  let photos = [];
+  let coverIndex = -1; // 대표(미리보기) 사진. -1 이면 없음
+  let oldPaths = [];   // 수정하기 전에 저장돼 있던 사진 경로
+  let photoEls = [];
+  const PHOTO_LINE = /^\[(사진|photo)(\d{1,2})\][ \t]*$/i;
+
+  const editor = setupEditor(contentInput, function () {
+    return photos.map(function (p) { return p.blob ? { url: p.url } : { path: p.path }; });
+  });
+
   const tagsInput = document.getElementById('tags');
-  const removeRow = document.getElementById('remove-image-row');
-  const removeBox = document.getElementById('remove-image');
 
   // "#여행, 맛집 #카페" -> ['여행', '맛집', '카페'] (#·쉼표·공백으로 나누고, 20자까지, 중복 제거, 영문은 소문자)
   function parseTags(text) {
@@ -38,10 +48,106 @@
   const heading = document.getElementById('write-heading');
 
   const MAX_INPUT_SIZE = 15 * 1024 * 1024;
+  const MAX_PHOTOS = 10;
   const TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 
   const editId = Number(new URLSearchParams(window.location.search).get('id')) || null;
-  let oldImagePath = null;
+
+  function updateBadges() {
+    const placed = mdPlacedPhotos(contentInput.value);
+    photoEls.forEach(function (el, i) {
+      el.badge.hidden = placed.indexOf(i + 1) !== -1 || i === coverIndex;
+      el.cover.checked = i === coverIndex;
+    });
+  }
+
+  function renderPhotos() {
+    photoList.replaceChildren();
+    photoEls = [];
+    photos.forEach(function (p, i) {
+      const li = document.createElement('li');
+      li.className = 'photo-item';
+
+      const img = document.createElement('img');
+      img.alt = '';
+      if (p.blob) img.src = p.url;
+      else img.dataset.imagePath = p.path; // 실제 주소는 fillPostImages가 채운다
+
+      const meta = document.createElement('div');
+      meta.className = 'photo-meta';
+      const name = document.createElement('span');
+      name.className = 'photo-name';
+      name.textContent = t('photo.n', { n: i + 1 });
+      const badge = document.createElement('span');
+      badge.className = 'photo-badge';
+      badge.textContent = t('photo.unplaced');
+
+      const actions = document.createElement('div');
+      actions.className = 'photo-actions';
+      const insertBtn = document.createElement('button');
+      insertBtn.type = 'button';
+      insertBtn.className = 'photo-insert';
+      insertBtn.textContent = t('photo.insert');
+      insertBtn.addEventListener('click', function () {
+        editor.insertBlock(t('photo.token', { n: i + 1 }));
+        updateBadges();
+      });
+
+      const coverLabel = document.createElement('label');
+      coverLabel.className = 'photo-cover';
+      const cover = document.createElement('input');
+      cover.type = 'checkbox';
+      cover.addEventListener('change', function () {
+        coverIndex = cover.checked ? i : -1;
+        updateBadges();
+      });
+      const coverText = document.createElement('span');
+      coverText.textContent = t('photo.cover');
+      coverLabel.append(cover, coverText);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'photo-remove secondary';
+      removeBtn.textContent = t('photo.remove');
+      removeBtn.addEventListener('click', function () { removePhoto(i); });
+
+      actions.append(insertBtn, coverLabel, removeBtn);
+      meta.append(name, badge, actions);
+      li.append(img, meta);
+      photoList.append(li);
+      photoEls.push({ badge: badge, cover: cover });
+    });
+    fillPostImages(photoList);
+    updateBadges();
+  }
+
+  // 사진을 지운다. 글 속의 그 사진 자리는 없애고, 뒤 번호는 하나씩 당긴다.
+  function removePhoto(i) {
+    const oldCount = photos.length;
+    const removed = i + 1;
+    if (photos[i].blob) URL.revokeObjectURL(photos[i].url);
+    photos.splice(i, 1);
+
+    const out = [];
+    contentInput.value.split('\n').forEach(function (line) {
+      const m = PHOTO_LINE.exec(line);
+      if (m) {
+        const n = Number(m[2]);
+        if (n === removed && n <= oldCount) return;
+        if (n > removed && n <= oldCount) {
+          out.push('[' + m[1] + (n - 1) + ']');
+          return;
+        }
+      }
+      out.push(line);
+    });
+    contentInput.value = out.join('\n');
+
+    if (coverIndex === i) coverIndex = -1;
+    else if (coverIndex > i) coverIndex--;
+    editor.refresh();
+    renderPhotos();
+  }
 
   if (editId) {
     heading.dataset.i18n = 'write.heading_edit';
@@ -51,7 +157,7 @@
 
     const { data: post, error } = await db
       .from('posts')
-      .select('id, title, content, author_id, image_path, category, tags')
+      .select('id, title, content, author_id, image_path, images, category, tags')
       .eq('id', editId)
       .maybeSingle();
 
@@ -66,9 +172,57 @@
     editor.refresh();
     categoryInput.value = isCategory(post.category) ? post.category : 'daily';
     tagsInput.value = Array.isArray(post.tags) ? post.tags.map(function (tag) { return '#' + tag; }).join(' ') : '';
-    oldImagePath = post.image_path;
-    if (oldImagePath) removeRow.hidden = false;
+
+    const stored = Array.isArray(post.images) ? post.images.slice() : [];
+    if (post.image_path && stored.indexOf(post.image_path) === -1) stored.unshift(post.image_path);
+    oldPaths = stored.slice();
+    photos = stored.map(function (path) { return { path: path, blob: null, url: '' }; });
+    coverIndex = post.image_path ? stored.indexOf(post.image_path) : -1;
+    renderPhotos();
   }
+
+  contentInput.addEventListener('input', updateBadges);
+
+  // 사진 고르기: 크기를 줄여 두고, 글의 커서 위치에 [사진N] 을 넣는다. 서버에는 '게시' 할 때 올린다.
+  photoInput.addEventListener('change', async function () {
+    const files = Array.from(photoInput.files);
+    photoInput.value = '';
+    if (files.length === 0) return;
+
+    let note = '';
+    const room = MAX_PHOTOS - photos.length;
+    if (files.length > room) note = t('photo.too_many');
+    const take = files.slice(0, Math.max(0, room));
+
+    button.disabled = true;
+    message.textContent = take.length > 0 ? t('write.processing') : note;
+    for (const file of take) {
+      if (!TYPES[file.type]) {
+        note = t('profile.photo_type');
+        continue;
+      }
+      if (file.size > MAX_INPUT_SIZE) {
+        note = t('profile.photo_size');
+        continue;
+      }
+      let blob = null;
+      try {
+        blob = await resizeImage(file, 1600, 0.85);
+      } catch (e) {
+        blob = null;
+      }
+      if (!blob) {
+        note = t('profile.photo_failed');
+        continue;
+      }
+      photos.push({ path: null, blob: blob, url: URL.createObjectURL(blob) });
+      if (photos.length === 1) coverIndex = 0; // 처음 올린 사진이 기본 대표 사진 (바꾸려면 체크를 옮기면 됨)
+      editor.insertBlock(t('photo.token', { n: photos.length }));
+    }
+    message.textContent = note;
+    button.disabled = false;
+    renderPhotos();
+  });
 
   button.addEventListener('click', async () => {
     const title = titleInput.value.trim();
@@ -85,56 +239,59 @@
       return;
     }
 
-    const file = imageInput.files[0];
-    if (file) {
-      if (!TYPES[file.type]) {
-        message.textContent = t('profile.photo_type');
-        return;
-      }
-      if (file.size > MAX_INPUT_SIZE) {
-        message.textContent = t('profile.photo_size');
-        return;
-      }
-    }
+    // 저장할 사진 = 대표 사진 + 글에 자리를 잡은 사진. 나머지는 저장하지 않고, 번호를 새로 맞춘다.
+    const placed = mdPlacedPhotos(content);
+    const kept = [];
+    photos.forEach(function (p, i) {
+      if (i === coverIndex || placed.indexOf(i + 1) !== -1) kept.push(i);
+    });
+    const newNumber = {};
+    kept.forEach(function (idx, k) { newNumber[idx + 1] = k + 1; });
+    const finalContent = content.split('\n').map(function (line) {
+      const m = PHOTO_LINE.exec(line);
+      if (!m) return line;
+      const k = newNumber[Number(m[2])];
+      return k ? '[' + m[1] + k + ']' : line;
+    }).join('\n');
 
     button.disabled = true;
     message.textContent = t('write.saving');
 
-     let newImagePath = null;
-    if (file) {
-      message.textContent = t('write.processing');
-
-      let resized;
-      try {
-        resized = await resizeImage(file, 1600, 0.85);
-      } catch (e) {
-        resized = null;
+    const uploaded = [];
+    const finalPaths = [];
+    const pending = kept.filter(function (idx) { return photos[idx].blob; }).length;
+    for (const idx of kept) {
+      const p = photos[idx];
+      if (!p.blob) {
+        finalPaths.push(p.path);
+        continue;
       }
-
-      if (!resized) {
-        message.textContent = t('profile.photo_failed');
-        button.disabled = false;
-        return;
-      }
-
-      newImagePath =
+      message.textContent = t('photo.uploading', { i: uploaded.length + 1, n: pending });
+      const path =
         session.user.id + '/' + Date.now() + '-' +
         Math.random().toString(36).slice(2, 8) + '.jpg';
-
       const { error: uploadError } = await db.storage
         .from('post-images')
-        .upload(newImagePath, resized, { contentType: 'image/jpeg' });
-
+        .upload(path, p.blob, { contentType: 'image/jpeg' });
       if (uploadError) {
+        if (uploaded.length > 0) await db.storage.from('post-images').remove(uploaded);
         message.textContent = t('profile.photo_failed');
         button.disabled = false;
         return;
       }
+      uploaded.push(path);
+      finalPaths.push(path);
     }
 
-    const fields = { title, content, category: categoryInput.value, tags: tags };
-    if (newImagePath) fields.image_path = newImagePath;
-    else if (editId && removeBox.checked && oldImagePath) fields.image_path = null;
+    const coverPath = coverIndex >= 0 ? finalPaths[kept.indexOf(coverIndex)] : null;
+    const fields = {
+      title,
+      content: finalContent,
+      category: categoryInput.value,
+      tags: tags,
+      images: finalPaths,
+      image_path: coverPath,
+    };
 
     let result;
     if (editId) {
@@ -155,8 +312,8 @@
     const { data: saved, error } = result;
 
     if (error || !saved) {
-      if (newImagePath) {
-        await db.storage.from('post-images').remove([newImagePath]);
+      if (uploaded.length > 0) {
+        await db.storage.from('post-images').remove(uploaded);
       }
       message.textContent =
         error && error.message && error.message.includes('Too many')
@@ -166,8 +323,10 @@
       return;
     }
 
-    if (editId && oldImagePath && (newImagePath || fields.image_path === null)) {
-      await db.storage.from('post-images').remove([oldImagePath]);
+    // 수정으로 빠진 사진 파일은 저장소에서 지운다
+    const obsolete = oldPaths.filter(function (p) { return finalPaths.indexOf(p) === -1; });
+    if (editId && obsolete.length > 0) {
+      await db.storage.from('post-images').remove(obsolete);
     }
 
     window.location.href = 'post.html?id=' + saved.id;

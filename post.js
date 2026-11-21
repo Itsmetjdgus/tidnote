@@ -10,7 +10,7 @@
 
   const { data: post, error } = await db
     .from('posts')
-    .select('id, title, content, author_id, created_at, image_path, category, tags, profiles(nickname)')
+    .select('id, title, content, author_id, created_at, image_path, images, category, tags, profiles(nickname)')
     .eq('id', id)
     .maybeSingle();
 
@@ -55,7 +55,10 @@
 
   const body = document.createElement('div');
   body.className = 'post-content';
-  body.append(renderMarkdown(post.content));
+  const photoPaths = Array.isArray(post.images) ? post.images : [];
+  const coverNumber = post.image_path ? photoPaths.indexOf(post.image_path) + 1 : 0;
+  const coverInBody = coverNumber > 0 && mdPlacedPhotos(post.content).indexOf(coverNumber) !== -1;
+  body.append(renderMarkdown(post.content, photoPaths.map(function (path) { return { path: path }; })));
 
   article.append(h2, date, author);
 
@@ -73,7 +76,7 @@
     article.append(tagRow);
   }
 
-  if (post.image_path) {
+  if (post.image_path && !coverInBody) {
     const img = document.createElement('img');
     img.dataset.imagePath = post.image_path; // 실제 주소는 fillPostImages가 채운다
     img.alt = post.title;
@@ -114,8 +117,10 @@
         return;
       }
       
-       if (post.image_path) {
-        await db.storage.from('post-images').remove([post.image_path]);
+      const allPhotos = photoPaths.slice();
+      if (post.image_path && allPhotos.indexOf(post.image_path) === -1) allPhotos.push(post.image_path);
+      if (allPhotos.length > 0) {
+        await db.storage.from('post-images').remove(allPhotos);
       }
 
       window.location.href = 'index.html';

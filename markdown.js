@@ -84,20 +84,59 @@ const MD_HEAD = /^(#{2,3})[ \t]+(\S.*)$/;
 const MD_QUOTE = /^>[ \t]?(.*)$/;
 const MD_ULI = /^-[ \t]+(\S.*)$/;
 const MD_OLI = /^(\d{1,3})\.[ \t]+(\S.*)$/;
+const MD_PHOTO = /^\[(?:사진|photo)(\d{1,2})\][ \t]*$/i; // 사진 자리: 줄 전체가 [사진1] (영어 화면에서는 [photo1])
 
 function mdIsBlockLine(line) {
-  return MD_HR.test(line) || MD_HEAD.test(line) || MD_QUOTE.test(line) || MD_ULI.test(line) || MD_OLI.test(line);
+  return MD_PHOTO.test(line) || MD_HR.test(line) || MD_HEAD.test(line) || MD_QUOTE.test(line) || MD_ULI.test(line) || MD_OLI.test(line);
+}
+
+// 사진 자리 [사진N] -> 사진 칸. images[N-1] 은 { path } (저장소 경로, 나중에 fillPostImages가 주소를 채움)
+// 또는 { url } (글쓰기 미리보기용 blob: 주소). 글에 쓴 주소는 절대 사진 주소로 쓰지 않는다.
+function mdPhoto(n, images) {
+  const item = images && images[n - 1];
+  if (!item) return null;
+  const img = document.createElement('img');
+  if (item.url && /^blob:/.test(item.url)) img.src = item.url;
+  else if (item.path) img.dataset.imagePath = item.path;
+  else return null;
+  img.alt = t('photo.alt', { n: n });
+  img.loading = 'lazy';
+  const fig = document.createElement('figure');
+  fig.className = 'md-photo';
+  fig.append(img);
+  return fig;
+}
+
+// 글 속에서 자리가 잡힌 사진 번호들(중복 없이)
+function mdPlacedPhotos(text) {
+  const found = [];
+  String(text).replace(/\r\n?/g, '\n').split('\n').forEach(function (line) {
+    const m = MD_PHOTO.exec(line);
+    if (m && found.indexOf(Number(m[1])) === -1) found.push(Number(m[1]));
+  });
+  return found;
 }
 
 // 글 전체 -> 화면 조각(DocumentFragment). 서식이 없는 글은 예전과 똑같이(줄바꿈 그대로) 한 덩어리로 보인다.
-function renderMarkdown(text) {
+function renderMarkdown(text, images) {
   const frag = document.createDocumentFragment();
   const lines = String(text).replace(/\r\n?/g, '\n').split('\n');
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
     let m;
-    if (MD_HR.test(line)) {
+    if ((m = MD_PHOTO.exec(line))) {
+      const fig = mdPhoto(Number(m[1]), images);
+      if (fig) {
+        frag.append(fig);
+      } else { // 그런 사진이 없으면 글자 그대로 보여 준다
+        const p = document.createElement('p');
+        p.className = 'md-p';
+        p.textContent = line;
+        frag.append(p);
+      }
+      i++;
+    } else if (MD_HR.test(line)) {
       frag.append(document.createElement('hr'));
       i++;
     } else if ((m = MD_HEAD.exec(line))) {
@@ -152,7 +191,7 @@ function renderMarkdown(text) {
 // 글 목록 카드의 미리보기용: 서식 기호를 지운 한 줄 글자(앞 100자)
 function stripMarkdown(text) {
   const lines = String(text).replace(/\r\n?/g, '\n').split('\n').map(function (line) {
-    if (MD_HR.test(line)) return '';
+    if (MD_HR.test(line) || MD_PHOTO.test(line)) return '';
     let m;
     if ((m = MD_HEAD.exec(line))) return m[2];
     if ((m = MD_QUOTE.exec(line))) return m[1];

@@ -1,7 +1,7 @@
 // 글쓰기 화면의 서식 도구줄·미리보기·글자 수. write.js가 setupEditor(글 입력칸)을 부른다.
 // 서식은 글에 기호로 저장된다(예: **굵게**). 화면에 바꿔 보여주는 일은 markdown.js가 한다.
 
-function setupEditor(textarea) {
+function setupEditor(textarea, getImages) {
   const wrap = document.createElement('div');
   wrap.className = 'editor';
   textarea.parentNode.insertBefore(wrap, textarea);
@@ -310,7 +310,8 @@ function setupEditor(textarea) {
         empty.textContent = t('editor.preview_empty');
         preview.append(empty);
       } else {
-        preview.append(renderMarkdown(textarea.value));
+        preview.append(renderMarkdown(textarea.value, getImages ? getImages() : null));
+        if (typeof fillPostImages === 'function') fillPostImages(preview);
       }
     }
     tabWrite.setAttribute('aria-selected', on ? 'false' : 'true');
@@ -331,5 +332,14 @@ function setupEditor(textarea) {
 
   showPreview(false);
   refresh();
-  return { refresh: refresh };
+  // 사진 자리표시처럼 한 줄을 차지하는 것을 커서 위치에 넣는다(줄 중간이면 다음 줄로)
+  function insertBlock(text) {
+    const before = textarea.value.slice(0, textarea.selectionStart);
+    const lead = before === '' || before.charAt(before.length - 1) === '\n' ? '' : '\n';
+    const ins = lead + text + '\n';
+    const at = textarea.selectionStart;
+    return apply(at, textarea.selectionEnd, ins, at + ins.length, at + ins.length);
+  }
+
+  return { refresh: refresh, insertBlock: insertBlock };
 }
