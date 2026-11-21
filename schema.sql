@@ -915,3 +915,64 @@ grant execute on function public.accept_terms(text) to authenticated;
 
 -- 6) API가 새 표·함수를 바로 알도록 새로고침
 notify pgrst, 'reload schema';
+
+-- 46일차 (2026-11-21): 차단 = 서로 안 보임 (글·댓글·사진·좋아요 숫자까지 같은 규칙)
+-- 1) 나와 상대 사이에 차단이 있는지(어느 쪽이 차단했든). 로그아웃 상태에서는 항상 false
+create or replace function public.is_blocked_pair(other uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(
+    exists (
+      select 1 from public.blocks b
+      where (b.blocker_id = auth.uid() and b.blocked_id = other)
+         or (b.blocker_id = other and b.blocked_id = auth.uid())
+    ),
+    false
+  );
+$$;
+
+revoke all on function public.is_blocked_pair(uuid) from public;
+grant execute on function public.is_blocked_pair(uuid) to anon, authenticated;
+
+-- 2) 글을 볼 수 있는 사람: 기존 규칙에서 "상대가 나를 차단함"만 막던 것을 "어느 쪽이든 차단이 있으면 막음"으로
+create or replace function public.can_view_author(author uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(
+    auth.uid() = author
+    or (
+      not public.is_blocked_pair(author)
+      and (
+        exists (select 1 from public.profiles p where p.id = author and not p.is_private)
+        or exists (
+          select 1 from public.follows f
+          where f.following_id = author
+            and f.follower_id = auth.uid()
+            and f.status = 'accepted'
+        )
+      )
+    ),
+    false
+  );
+$$;
+
+-- 3) 댓글: 글을 볼 수 있고, 쓴 사람과 나 사이에 차단이 없을 때만 보임
+drop policy if exists "read comments of viewable posts" on comments;
+
+create policy "read comments of viewable posts"
+  on comments for select
+  using (
+    exists (select 1 from posts p where p.id = comments.post_id)
+    and not public.is_blocked_pair(comments.author_id)
+  );
+
+-- 4) API가 바뀐 규칙을 바로 알도록 새로고침
+notify pgrst, 'reload schema';

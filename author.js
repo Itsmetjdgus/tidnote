@@ -38,7 +38,9 @@
   }
 
   if (posts.length === 0) {
-    list.textContent = t('blog.empty');
+    // 내가 차단한 계정이면 글이 없는 것이 아니라 숨겨진 것이므로 이유를 알려 준다
+    const relation = await getBlockRelation(authorId);
+    list.textContent = relation === 'blocking' ? t('block.hidden_posts') : t('blog.empty');
     return;
   }
 
