@@ -976,3 +976,46 @@ create policy "read comments of viewable posts"
 
 -- 4) API가 바뀐 규칙을 바로 알도록 새로고침
 notify pgrst, 'reload schema';
+
+-- 47일차 (2026-11-21): 신고 처리 기록과 운영 도구용 표
+-- 1) 신고에 "언제, 어떻게 처리했는지" 열 추가 (운영자만 SQL Editor 에서 기록. 사이트에서는 쓸 수 없음)
+alter table reports add column if not exists handled_at timestamptz;
+alter table reports add column if not exists handled_note text
+  check (handled_note is null or char_length(handled_note) <= 500);
+
+-- 2) 이미 처리됨(open 이 아님)인데 시각이 없는 옛 줄이 있으면 채움 (보통 0줄)
+update reports set handled_at = now() where status <> 'open' and handled_at is null;
+
+-- 3) 규칙: open 이면 처리 시각 없음, 처리됐으면 처리 시각 있음
+alter table reports drop constraint if exists reports_handled_check;
+alter table reports add constraint reports_handled_check
+  check ((status = 'open' and handled_at is null) or (status <> 'open' and handled_at is not null));
+
+-- 4) 신고 쓰기 규칙 교체: 사용자는 처리 기록 열을 채울 수 없음
+drop policy if exists "users can create reports" on reports;
+create policy "users can create reports"
+  on reports for insert to authenticated
+  with check (auth.uid() = reporter_id and status = 'open' and handled_at is null and handled_note is null);
+
+-- 5) 열린 신고를 빨리 찾기 위한 색인
+create index if not exists reports_status_idx on reports (status, created_at);
+
+-- 6) 삭제한 글·댓글의 사본과 정지 기록 (복구용). 사이트(API)에서는 읽기·쓰기 모두 불가
+create table if not exists moderation_log (
+  id bigint generated always as identity primary key,
+  action text not null check (action in ('remove_post', 'remove_comment', 'suspend_user', 'unsuspend_user')),
+  target_user uuid references profiles(id) on delete cascade,
+  target_type text,
+  target_id bigint,
+  snapshot jsonb,
+  note text check (note is null or char_length(note) <= 500),
+  created_at timestamptz not null default now()
+);
+
+alter table moderation_log enable row level security;
+revoke all on moderation_log from anon, authenticated;
+
+create index if not exists moderation_log_created_idx on moderation_log (created_at);
+
+-- 7) API가 새 열을 바로 알도록 새로고침
+notify pgrst, 'reload schema';
