@@ -1,6 +1,6 @@
 // 회원가입 창(모달). nav.js의 openSignup()이 필요할 때 불러온다.
 // "만 14세 이상, 약관 동의"는 여기서만 받는다(로그인에서는 받지 않는다).
-const TERMS_VERSION = '2027-01-01'; // terms.html / privacy.html 시행일과 같아야 한다
+// 약관 버전(TERMS_VERSION)은 nav.js 에 있다.
 
 function showSignupModal() {
   if (document.getElementById('signup-modal')) return;

@@ -1484,3 +1484,7 @@ a.card-author:hover .card-nick { text-decoration: underline; }
 .post-like-row { margin: 20px 0 8px; }
 .post-like-row .like-btn { font-size: 16px; padding: 8px 12px; border: 1px solid var(--accent); border-radius: 999px; }
 .post-like-row .like-btn svg { width: 20px; height: 20px; }
+
+/* 45일차: 약관 재동의 */
+#consent-modal .modal-foot { margin-top: 0.75rem; }
+#consent-modal .link-button { font: inherit; }

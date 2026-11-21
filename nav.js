@@ -1,3 +1,6 @@
+// 지금 시행 중인 약관 버전. terms.html / privacy.html 시행일, DB 함수 current_terms_version() 과 같아야 한다.
+const TERMS_VERSION = '2027-01-01';
+
 // 필요할 때만 스크립트를 불러온다
 function loadScript(src) {
   return new Promise(function (resolve, reject) {
@@ -7,6 +10,31 @@ function loadScript(src) {
     s.onerror = reject;
     document.head.append(s);
   });
+}
+
+// 로그인한 사용자가 현재 약관 버전에 동의한 기록이 없으면 재동의 창을 띄운다.
+// 확인 자체가 실패하면(네트워크 문제 등) 사용을 막지 않고 조용히 넘어간다.
+async function maybeAskTermsConsent(userId) {
+  const page = window.location.pathname.split('/').pop();
+  if (page === 'terms.html' || page === 'privacy.html') return;
+  try {
+    const { data, error } = await db
+      .from('user_consents')
+      .select('terms_version')
+      .eq('user_id', userId)
+      .eq('terms_version', TERMS_VERSION)
+      .limit(1);
+    if (error) {
+      console.error(error);
+      return;
+    }
+    if (data && data.length > 0) return;
+    if (typeof t !== 'function') await loadScript('i18n.js');
+    if (typeof showConsentModal !== 'function') await loadScript('consent.js');
+    showConsentModal();
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 // 회원가입 창 열기: 번역 도우미와 가입 창 스크립트가 없으면 불러온 뒤 연다
@@ -286,6 +314,8 @@ async function renderNav() {
     nav.append(signup);
     return;
   }
+
+  maybeAskTermsConsent(session.user.id);
 
   const { count: pendingCount } = await db
     .from('follows')

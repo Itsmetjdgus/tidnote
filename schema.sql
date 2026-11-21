@@ -836,3 +836,82 @@ create trigger limit_like_rate_trigger
 
 -- 5) API가 새 표를 바로 알도록 새로고침
 notify pgrst, 'reload schema';
+
+-- 45일차 (2026-11-21): 약관 동의 기록·서버 검증
+-- 1) 동의 기록 표: 누가 어느 버전에 언제 동의했는지. 읽기는 본인 것만, 쓰기는 아래 함수들만 가능
+create table user_consents (
+  user_id uuid not null references profiles(id) on delete cascade,
+  terms_version text not null check (terms_version ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'),
+  agreed_at timestamptz not null default now(),
+  primary key (user_id, terms_version)
+);
+
+alter table user_consents enable row level security;
+
+create policy "users can read own consents"
+  on user_consents for select
+  using (user_id = auth.uid());
+
+revoke insert, update, delete on user_consents from anon, authenticated;
+
+-- 2) 지금 시행 중인 약관 버전(사이트 코드의 TERMS_VERSION 과 같아야 함. 약관을 바꿀 때 이 값도 같이 바꿈)
+create or replace function public.current_terms_version()
+returns text
+language sql
+immutable
+set search_path = ''
+as $$ select '2027-01-01'::text $$;
+
+-- 3) 기존 계정은 가입 때 약관 동의창을 거쳤으므로 현재 버전에 동의한 것으로 채움
+insert into user_consents (user_id, terms_version, agreed_at)
+select id, public.current_terms_version(), coalesce(created_at, now())
+from profiles
+on conflict do nothing;
+
+-- 4) 가입 함수: 약관 버전이 없거나 현재 버전과 다르면 가입을 거부하고, 맞으면 동의 기록을 남김
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  if coalesce(new.raw_user_meta_data ->> 'terms_version', '') <> public.current_terms_version() then
+    raise exception 'Terms agreement required';
+  end if;
+
+  insert into public.profiles (id, nickname)
+  values (new.id, 'user_' || substr(new.id::text, 1, 8));
+
+  insert into public.user_consents (user_id, terms_version)
+  values (new.id, public.current_terms_version());
+
+  return new;
+end;
+$$;
+
+-- 5) 재동의: 로그인한 본인이 현재 버전에 동의했다고 기록(같은 버전을 또 눌러도 안전)
+create or replace function public.accept_terms(p_version text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+  if p_version is distinct from public.current_terms_version() then
+    raise exception 'Outdated terms version';
+  end if;
+
+  insert into public.user_consents (user_id, terms_version)
+  values (auth.uid(), p_version)
+  on conflict do nothing;
+end;
+$$;
+
+revoke all on function public.accept_terms(text) from public, anon;
+grant execute on function public.accept_terms(text) to authenticated;
+
+-- 6) API가 새 표·함수를 바로 알도록 새로고침
+notify pgrst, 'reload schema';

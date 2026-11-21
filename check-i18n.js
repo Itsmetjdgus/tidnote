@@ -104,7 +104,7 @@ report('코드에서 쓰는데 사전에 없는 키',
     }
   });
   // 시행일 = 약관 버전
-  const tv = (fs.readFileSync('signup-modal.js', 'utf8').match(/TERMS_VERSION\s*=\s*'([^']+)'/) || [])[1];
+  const tv = (fs.readFileSync('nav.js', 'utf8').match(/TERMS_VERSION\s*=\s*'([^']+)'/) || [])[1];
   ['terms.html', 'privacy.html'].forEach(function (f) {
     const html = fs.readFileSync(f, 'utf8');
     const dates = html.match(/(Effective date|시행일): ([0-9-]+)/g) || [];
