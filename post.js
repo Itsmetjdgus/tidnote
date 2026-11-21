@@ -10,7 +10,7 @@
 
   const { data: post, error } = await db
     .from('posts')
-    .select('id, title, content, author_id, created_at, image_path, images, category, tags, profiles(nickname)')
+    .select('id, title, content, author_id, created_at, image_path, images, category, tags, profiles!posts_author_profile_fkey(nickname)')
     .eq('id', id)
     .maybeSingle();
 
@@ -87,6 +87,14 @@
 
   article.append(body);
   fillPostImages(article);
+
+  if (typeof createLikeButton === 'function') {
+    const likeRow = document.createElement('div');
+    likeRow.className = 'post-like-row';
+    likeRow.append(createLikeButton(post.id));
+    article.append(likeRow);
+    fillLikes(likeRow);
+  }
 
   if (isOwner) {
     const actions = document.createElement('div');

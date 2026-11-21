@@ -44,4 +44,5 @@
 
     posts.forEach((post) => list.append(renderPostCard(post, false)));
   fillPostImages(list);
+  if (typeof fillLikes === 'function') fillLikes(list);
 })();

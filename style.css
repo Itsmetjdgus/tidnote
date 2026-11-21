@@ -1457,3 +1457,30 @@ a.card-author:hover .card-nick { text-decoration: underline; }
   border-radius: 8px;
 }
 .editor-preview .md-photo img { max-height: 420px; }
+
+/* 44일차: 좋아요 */
+.like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-gray);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.like-btn:hover { color: var(--header-text); }
+.like-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.like-btn:disabled { cursor: default; opacity: 0.7; }
+.like-btn.liked { color: #b3261e; }
+.like-btn.liked svg { fill: currentColor; }
+.card-foot .like-btn { margin-left: -6px; }
+.post-like-row { margin: 20px 0 8px; }
+.post-like-row .like-btn { font-size: 16px; padding: 8px 12px; border: 1px solid var(--accent); border-radius: 999px; }
+.post-like-row .like-btn svg { width: 20px; height: 20px; }

@@ -740,3 +740,99 @@ create trigger validate_post_images_trigger
 
 -- 4) API가 새 열을 바로 알도록 새로고침
 notify pgrst, 'reload schema';
+
+-- 44일차 (2026-11-21): 좋아요
+-- 1) 좋아요 표: 누가 어느 글에 눌렀는지. 읽기는 "내가 누른 것"만 가능 (남이 누가 눌렀는지는 API로도 알 수 없음)
+-- (id 열을 따로 둔 이유: post_id+user_id 를 기본키로 쓰면 API가 이 표를 "글-사용자 연결 표"로 보고
+--  글 목록의 profiles(...) 연결이 모호하다며 오류를 냅니다. 중복 방지는 unique 로 합니다)
+create table post_likes (
+  id bigint generated always as identity primary key,
+  post_id bigint not null references posts(id) on delete cascade,
+  user_id uuid not null default auth.uid() references profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (post_id, user_id)
+);
+
+create index post_likes_user_idx on post_likes (user_id, created_at desc);
+
+alter table post_likes enable row level security;
+
+create policy "users can read own likes"
+  on post_likes for select
+  using (user_id = auth.uid());
+
+create policy "users can like viewable posts"
+  on post_likes for insert to authenticated
+  with check (
+    user_id = auth.uid()
+    and exists (select 1 from posts p where p.id = post_likes.post_id)
+  );
+
+create policy "users can unlike"
+  on post_likes for delete to authenticated
+  using (user_id = auth.uid());
+
+-- 2) 좋아요 수 표: 글을 볼 수 있는 사람은 숫자를 볼 수 있다. 쓰기는 아래 트리거만 가능 (숫자 조작 방지)
+create table post_like_counts (
+  post_id bigint primary key references posts(id) on delete cascade,
+  like_count integer not null default 0 check (like_count >= 0)
+);
+
+alter table post_like_counts enable row level security;
+
+create policy "read counts of viewable posts"
+  on post_like_counts for select
+  using (exists (select 1 from posts p where p.id = post_like_counts.post_id));
+
+revoke insert, update, delete on post_like_counts from anon, authenticated;
+
+-- 3) 좋아요를 누르거나 취소하면 숫자를 자동으로 맞춤 (계정·글을 지울 때도 함께 맞춰짐)
+create or replace function public.sync_like_count()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_op = 'INSERT' then
+    insert into public.post_like_counts (post_id, like_count)
+    values (new.post_id, 1)
+    on conflict (post_id) do update
+      set like_count = public.post_like_counts.like_count + 1;
+  else
+    update public.post_like_counts
+      set like_count = greatest(like_count - 1, 0)
+      where post_id = old.post_id;
+  end if;
+  return null;
+end;
+$$;
+
+create trigger sync_like_count_trigger
+  after insert or delete on public.post_likes
+  for each row execute function public.sync_like_count();
+
+-- 4) 1분에 30번까지만 누를 수 있음 (연타·자동 프로그램 방지)
+create or replace function public.limit_like_rate()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if (
+    select count(*) from public.post_likes
+    where user_id = new.user_id
+      and created_at > now() - interval '1 minute'
+  ) >= 30 then
+    raise exception 'Too many likes. Please wait a moment.';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger limit_like_rate_trigger
+  before insert on public.post_likes
+  for each row execute function public.limit_like_rate();
+
+-- 5) API가 새 표를 바로 알도록 새로고침
+notify pgrst, 'reload schema';

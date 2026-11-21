@@ -132,6 +132,7 @@ function renderPostCard(post, showAuthor) {
   const num = document.createElement('span');
   num.textContent = String(count);
   comments.append(num);
+  if (typeof createLikeButton === 'function') foot.append(createLikeButton(post.id));
   foot.append(comments);
 
   if (Array.isArray(post.tags) && post.tags.length > 0) {

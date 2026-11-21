@@ -68,7 +68,7 @@ async function loadPosts() {
 
   let query = db
     .from('posts')
-    .select('id, title, content, author_id, created_at, image_path, category, tags, comments(count), profiles(nickname, avatar_path)', { count: 'exact' });
+    .select('id, title, content, author_id, created_at, image_path, category, tags, comments(count), profiles!posts_author_profile_fkey(nickname, avatar_path)', { count: 'exact' });
 
   if (keyword) {
     query = query.or('title.ilike.%' + keyword + '%,content.ilike.%' + keyword + '%');
@@ -103,6 +103,7 @@ async function loadPosts() {
 
   data.forEach((post) => list.append(renderPostCard(post, true)));
   fillPostImages(list);
+  if (typeof fillLikes === 'function') fillLikes(list);
 
   const totalPages = Math.max(1, Math.ceil((count || 0) / PAGE_SIZE));
 
