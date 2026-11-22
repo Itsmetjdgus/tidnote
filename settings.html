@@ -126,6 +126,22 @@
                         <li><a href="report.html" data-i18n="settings.about_report"></a></li>
                         <li><span data-i18n="settings.about_contact"></span>: Tidnote.contact@gmail.com</li>
                     </ul>
+                    <hr>
+                    <h3 data-i18n="fb.title"></h3>
+                    <p data-i18n="fb.desc"></p>
+                    <form class="write-form" id="feedback-form">
+                        <label for="fb-kind" data-i18n="fb.kind"></label>
+                        <select id="fb-kind">
+                            <option value="bug" data-i18n="fb.k_bug"></option>
+                            <option value="idea" data-i18n="fb.k_idea"></option>
+                            <option value="other" data-i18n="fb.k_other"></option>
+                        </select>
+                        <label for="fb-message" data-i18n="fb.message"></label>
+                        <textarea id="fb-message" rows="5" maxlength="1000"></textarea>
+                        <p id="fb-counter" class="state-message"></p>
+                        <button type="submit" id="fb-btn" data-i18n="fb.send"></button>
+                        <p id="fb-result" class="form-message"></p>
+                    </form>
                 </section>
             </div>
         </div>
@@ -144,6 +160,7 @@
     <script src="settings.js"></script>
     <script src="blocked-list.js"></script> 
     <script src="password-change.js"></script>   
+    <script src="feedback.js"></script>
     <script src="language-select.js"></script>
 </body>
 </html>

@@ -178,3 +178,13 @@ select o.name as 경로, o.created_at, round(((o.metadata ->> 'size')::bigint) /
    and not exists (select 1 from moderation_log m where m.action = 'remove_post' and m.snapshot -> 'post' -> 'images' @> to_jsonb(o.name))
  order by o.created_at
  limit 50;
+
+-- @@12 매일 한 번(신고와 함께): 새 의견 보기 (최근 50건, 새 것이 위). 읽은 뒤 처리할 것은 따로 메모하세요
+select f.id, f.created_at, f.kind as 종류, pr.nickname as 보낸이, f.message as 내용
+  from feedback f
+  left join profiles pr on pr.id = f.user_id
+ order by f.created_at desc
+ limit 50;
+
+-- @@13 의견 지우기: 처리가 끝났거나 개인정보가 적혀 있는 의견 한 건 (번호는 블록 12 의 id, 0 → 실제 번호). 지우면 되돌릴 수 없습니다
+delete from feedback where id = 0;

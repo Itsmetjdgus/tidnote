@@ -1019,3 +1019,60 @@ create index if not exists moderation_log_created_idx on moderation_log (created
 
 -- 7) API가 새 열을 바로 알도록 새로고침
 notify pgrst, 'reload schema';
+
+-- 49일차 (2026-11-23): 의견 보내기(feedback). 로그인한 사용자가 쓸 수만 있고, 사이트에서는 읽을 수 없다(운영자만 대시보드에서 읽음)
+create table if not exists feedback (
+  id bigint generated always as identity primary key,
+  user_id uuid not null default auth.uid() references profiles(id) on delete cascade,
+  kind text not null check (kind in ('bug', 'idea', 'other')),
+  message text not null check (char_length(message) between 5 and 1000),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists feedback_created_idx on feedback (created_at desc);
+
+alter table feedback enable row level security;
+
+-- 쓰기(insert)만 허용: 읽기·수정·삭제 권한 자체를 주지 않는다
+revoke all on feedback from anon, authenticated;
+grant insert on feedback to authenticated;
+
+drop policy if exists "users can send feedback" on feedback;
+create policy "users can send feedback"
+  on feedback for insert to authenticated
+  with check (auth.uid() = user_id);
+
+-- 보낸 시각은 서버가 정하고, 앞뒤 공백을 지우고, 1시간에 5건·하루 20건까지만 받는다
+create or replace function public.prepare_feedback()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  new.created_at := now();
+  new.message := btrim(new.message);
+
+  if (
+    select count(*) from public.feedback
+    where user_id = new.user_id
+      and created_at > now() - interval '1 hour'
+  ) >= 5 or (
+    select count(*) from public.feedback
+    where user_id = new.user_id
+      and created_at > now() - interval '1 day'
+  ) >= 20 then
+    raise exception 'Too many feedback messages. Please wait a moment.';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists prepare_feedback_trigger on public.feedback;
+
+create trigger prepare_feedback_trigger
+  before insert on public.feedback
+  for each row execute function public.prepare_feedback();
+
+notify pgrst, 'reload schema';
