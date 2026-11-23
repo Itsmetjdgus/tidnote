@@ -169,6 +169,7 @@
 
     messageEl = document.createElement('p');
     messageEl.className = 'form-message';
+    messageEl.setAttribute('role', 'status');
     area.append(messageEl);
 
     const locked = profile.is_private && !isOwn && followStatus !== 'accepted';

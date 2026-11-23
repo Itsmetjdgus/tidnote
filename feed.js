@@ -186,7 +186,10 @@ async function loadPosts() {
   const prev = document.createElement('a');
   prev.textContent = t('blog.prev');
   if (page > 1) prev.href = feedUrl(rawQuery, cat, tag, page - 1, view);
-  else prev.className = 'disabled';
+  else {
+    prev.className = 'disabled';
+    prev.setAttribute('aria-disabled', 'true');
+  }
 
   const info = document.createElement('span');
   info.textContent = t('blog.page_of', { page: page, total: totalPages });
@@ -194,7 +197,10 @@ async function loadPosts() {
   const next = document.createElement('a');
   next.textContent = t('blog.next');
   if (page < totalPages) next.href = feedUrl(rawQuery, cat, tag, page + 1, view);
-  else next.className = 'disabled';
+  else {
+    next.className = 'disabled';
+    next.setAttribute('aria-disabled', 'true');
+  }
 
   pager.append(prev, info, next);
 }

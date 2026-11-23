@@ -130,6 +130,7 @@
 
     const msg = document.createElement('p');
     msg.className = 'state-message';
+    msg.setAttribute('role', 'status');
 
     fileInput.addEventListener('change', function () {
       msg.textContent = '';

@@ -100,6 +100,7 @@ function showSignupModal() {
 
   const msg = document.createElement('p');
   msg.className = 'form-message';
+  msg.setAttribute('role', 'status');
 
   form.append(
     email.label, email.input,

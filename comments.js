@@ -114,6 +114,7 @@
 
     const message = document.createElement('p');
     message.className = 'form-message';
+    message.setAttribute('role', 'status');
 
     button.addEventListener('click', async () => {
       const content = textarea.value.trim();

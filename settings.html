@@ -37,7 +37,7 @@
                         <label for="nickname" data-i18n="settings.nickname_title"></label>
                         <input type="text" id="nickname" maxlength="20" autocomplete="off">
                         <button type="submit" id="nickname-btn" data-i18n="settings.nickname_save"></button>
-                        <p id="nickname-message" class="form-message"></p>
+                        <p id="nickname-message" class="form-message" role="status"></p>
                     </form>
                                         <hr>
                     <h3 data-i18n="settings.lang_title"></h3>
@@ -76,13 +76,13 @@
                         </label>
 
                         <button type="button" id="privacy-save" data-i18n="settings.save"></button>
-                        <p id="privacy-message" class="form-message"></p>
+                        <p id="privacy-message" class="form-message" role="status"></p>
                     </div>
                     <hr>
                     <h3 data-i18n="block.list_title"></h3>
                     <p data-i18n="block.list_desc"></p>
                     <div id="blocked-list"></div>
-                    <p id="blocked-message" class="form-message"></p>
+                    <p id="blocked-message" class="form-message" role="status"></p>
                 </section>
 
                 <!-- 보안 -->
@@ -101,7 +101,7 @@
                             <span data-i18n="pw.show"></span>
                         </label>
                         <button type="submit" id="pw-btn" data-i18n="pw.btn"></button>
-                        <p id="pw-message" class="form-message"></p>
+                        <p id="pw-message" class="form-message" role="status"></p>
                     </form>
                     <hr>
                     <h3 data-i18n="settings.delete_title"></h3>
@@ -112,7 +112,7 @@
                         <label for="delete-confirm" data-i18n="settings.delete_type"></label>
                         <input type="text" id="delete-confirm" autocomplete="off">
                         <button type="submit" id="delete-account-btn" class="danger-btn" data-i18n="settings.delete_btn"></button>
-                        <p id="delete-message" class="form-message"></p>
+                        <p id="delete-message" class="form-message" role="status"></p>
                     </form>
                 </section>
 
@@ -140,7 +140,7 @@
                         <textarea id="fb-message" rows="5" maxlength="1000"></textarea>
                         <p id="fb-counter" class="state-message"></p>
                         <button type="submit" id="fb-btn" data-i18n="fb.send"></button>
-                        <p id="fb-result" class="form-message"></p>
+                        <p id="fb-result" class="form-message" role="status"></p>
                     </form>
                 </section>
             </div>

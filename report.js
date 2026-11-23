@@ -37,6 +37,7 @@ function createReportControl(targetType, targetId) {
 
   const message = document.createElement('p');
   message.className = 'form-message';
+  message.setAttribute('role', 'status');
 
   toggle.addEventListener('click', () => {
     form.hidden = !form.hidden;
