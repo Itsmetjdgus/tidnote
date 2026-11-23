@@ -350,30 +350,6 @@ header nav {
   font-size: 14px;
 }
 
-.hero {
-  text-align: center;
-  padding: 32px 0 24px;
-}
-
-.hero h2 {
-  font-size: 32px;
-  line-height: 1.25;
-  margin: 0 0 12px;
-}
-
-.hero-sub {
-  color: var(--text-gray);
-  font-size: 18px;
-  line-height: 1.6;
-  margin: 0 0 20px;
-}
-
-.hero-note {
-  margin: 16px 0 0;
-  color: var(--text-gray);
-  font-size: 14px;
-}
-
 .badge {
   display: inline-block;
   margin: 0 0 12px;
@@ -383,13 +359,6 @@ header nav {
   color: var(--header-text);
   font-size: 13px;
   font-weight: bold;
-}
-
-.hero-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
 }
 
 .btn {
@@ -403,33 +372,6 @@ header nav {
   text-decoration: none;
 }
 
-.btn-secondary {
-  background-color: white;
-  color: var(--link-color);
-}
-
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-}
-
-.feature {
-  background-color: white;
-  padding: 16px;
-  border-radius: 8px;
-}
-
-.feature h4 {
-  margin: 0 0 6px;
-}
-
-.feature p {
-  margin: 0;
-  line-height: 1.6;
-  color: #444;
-}
-
 .notice {
   margin: 0 0 12px;
   padding: 10px 12px;
@@ -439,16 +381,6 @@ header nav {
   color: #5b4300;
   font-size: 14px;
   line-height: 1.6;
-}
-
-@media (max-width: 600px) {
-  .hero h2 {
-    font-size: 26px;
-  }
-
-  .hero-sub {
-    font-size: 16px;
-  }
 }
 
 a:focus-visible,
@@ -1510,7 +1442,6 @@ a.card-author:hover .card-nick { text-decoration: underline; }
   line-height: 1.5;
   color: var(--text-gray);
 }
-
 
 /* 51일차: 폰 화면(폭 600px 이하)에서 손가락으로 누르기 쉬운 크기(44px)로 맞춘다.
    헤더 검색창은 헤더 높이(120px)를 지키려고 제외한다. */

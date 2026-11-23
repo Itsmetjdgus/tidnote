@@ -1,6 +1,6 @@
 # Tidnote
 
-A place for the things you rarely say. Write about your day or what's on your mind, with words or a photo, and follow people to read theirs.
+A blog for everyday life and interests. Write posts with photos, pick a category, and follow people to read theirs, with people from different countries and cultures.
 
 Status: in development (closed beta planned for 2027-01-01).
 
@@ -87,8 +87,17 @@ Pushing to `main` publishes the site on GitHub Pages within a minute or two. The
 `ops.sql` is a runbook for the Supabase SQL Editor. Select one block and run only that block.
 
 - Daily: open reports (block 1) and new feedback (block 12)
-- Before launch: security checks (blocks 14–17: RLS on, policies, no anonymous write policies, terms version)
+- Before launch: security checks (blocks 14–18: RLS on, policies, no anonymous write policies, terms version, function permissions)
 - Monthly: storage use (block 10)
+
+### Posting a notice after acting on a report
+
+The "Notices of actions taken" list on `report.html` is static HTML, so it is updated with a normal commit.
+
+1. Act on the report with the `ops.sql` blocks (remove content or suspend, then close the report).
+2. In `report.html`, add one line to **both** lists: `#notices` (English) and `#notices-ko` (Korean). Remove the "No actions have been taken yet." line the first time.
+3. Write only the date, the kind of content, and the rule it broke, for example `2027-01-15: A post was removed for sharing someone else's personal information.` Never include nicknames, user IDs, post text, or anything that identifies the reporter or the reported user.
+4. Commit, open a pull request, check the page, and merge.
 
 ## Security
 

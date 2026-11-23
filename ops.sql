@@ -1,7 +1,7 @@
 -- Tidnote 운영 런북 (신고 처리). 사이트 코드에서는 쓰지 않는 파일입니다.
 -- 사용법: Supabase 대시보드 → SQL Editor 에서 **아래 블록 하나만 마우스로 선택**한 뒤 Run 을 누릅니다.
 --         (파일 전체를 한 번에 실행하지 마세요. 값이 자리표시자(0, 0000…)라 전체를 실행해도 아무것도 바뀌지는 않지만 의미가 없습니다.)
--- 값을 바꾸는 곳: 번호는 0 → 실제 번호, 사용자 ID 는 00000000-… → 실제 ID, '사유' → 짧은 사유(군·개인정보 금지).
+-- 값을 바꾸는 곳: 번호는 0 → 실제 번호, 사용자 ID 는 00000000-… → 실제 ID, '사유' → 짧은 사유(개인정보 금지).
 -- 이 파일에는 비밀번호·키·개인 정보를 적지 않습니다(저장소가 공개).
 
 -- @@0 처음 한 번: 정지 기능에 필요한 열과 표가 있는지 확인 (2줄이 나와야 함: banned_until / sessions)
@@ -214,3 +214,15 @@ select tablename as 표, policyname as 정책, cmd as 종류, roles as 대상
 
 -- @@17 베타 전 보안 점검 ④(읽기 전용): 약관 버전. '2027-01-01' 한 줄이어야 정상 (nav.js TERMS_VERSION, terms.html, privacy.html 과 같아야 함)
 select public.current_terms_version() as 약관버전;
+
+-- @@18 베타 전 보안 점검 ⑤(읽기 전용): 함수 실행 권한. anon 실행 = true 인 함수는 로그인 없이 부를 수 있음
+--      정상: is_blocked_pair, can_view_author 와 트리거 함수(handle_*, prepare_*, sync_*, limit_*, protect_*)만 true.
+--      delete_my_account, accept_terms, hidden_user_ids, get_block_relation 이 true 이면 문제(schema.sql 의 revoke 를 다시 실행)
+select p.proname as 함수,
+       p.prosecdef as 보안정의자,
+       has_function_privilege('anon', p.oid, 'execute') as anon_실행,
+       has_function_privilege('authenticated', p.oid, 'execute') as 로그인_실행
+  from pg_proc p
+  join pg_namespace n on n.oid = p.pronamespace
+ where n.nspname = 'public'
+ order by anon_실행 desc, p.proname;
