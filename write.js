@@ -149,6 +149,7 @@
     });
     fillPostImages(photoList);
     updateBadges();
+    if (editor.updatePhotos) editor.updatePhotos();
   }
 
   // 사진을 지운다. 글 속의 그 사진 자리는 없애고, 뒤 번호는 하나씩 당긴다.
