@@ -63,6 +63,10 @@ async function fillPostImages(root) {
 function renderPostCard(post, showAuthor) {
   const article = document.createElement('article');
   article.className = 'post';
+  // ⋯ 메뉴(post-menu.js)가 읽는 값
+  article.dataset.postId = String(post.id);
+  if (post.author_id) article.dataset.authorId = post.author_id;
+  if (post.profiles && post.profiles.nickname) article.dataset.nickname = post.profiles.nickname;
 
   if (showAuthor) {
     const name = post.profiles && post.profiles.nickname ? post.profiles.nickname : t('post.anonymous');

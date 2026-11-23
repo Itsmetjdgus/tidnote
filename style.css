@@ -1530,3 +1530,102 @@ a.card-author:hover .card-nick { text-decoration: underline; }
 .feed-status:empty { display: none; }
 .feed-sentinel { height: 1px; }
 .feed-more { display: block; margin: 8px auto 24px; }
+
+/* 58일차: 게시물 ⋯ 메뉴 */
+article.post { position: relative; }
+.post-menu {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+}
+.post-menu-btn { color: var(--text-gray); }
+.post-menu-btn:hover { background: rgba(31, 53, 82, 0.08); }
+article.post.has-menu > h2,
+article.post[data-post-id] .card-author,
+article.post[data-post-id] .card-meta { padding-right: 44px; }
+.post-menu-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 210px;
+  padding: 6px;
+  background: white;
+  border: 1px solid #e5dccb;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+.post-menu-list[hidden],
+.post-menu-backdrop[hidden] { display: none; }
+.post-menu-list button {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--header-text);
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+.post-menu-list button:hover,
+.post-menu-list button:focus-visible { background: var(--main-color); }
+.post-menu-list .danger-text { color: #b91c1c; font-weight: bold; }
+.post-menu-cancel { display: none !important; }
+.post-menu-backdrop { display: none; }
+
+/* 폰: 화면 아래에서 올라오는 시트(인스타그램처럼) */
+@media (max-width: 600px) {
+  .post-menu-backdrop:not([hidden]) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    background: rgba(0, 0, 0, 0.4);
+  }
+  .post-menu-list {
+    position: fixed;
+    top: auto;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    z-index: 1201;
+    min-width: 0;
+    padding: 6px;
+    border-radius: 16px;
+  }
+  .post-menu-list button {
+    min-height: 50px;
+    text-align: center;
+    border-bottom: 1px solid #efe7d6;
+    border-radius: 0;
+  }
+  .post-menu-list button:last-child { border-bottom: none; }
+  .post-menu-cancel { display: block !important; }
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 1300;
+  max-width: calc(100% - 32px);
+  padding: 12px 18px;
+  transform: translateX(-50%);
+  border-radius: 10px;
+  background: var(--header-text);
+  color: white;
+  font-size: 15px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+.toast[hidden] { display: none; }
+.toast .link-button { color: var(--main-color); font-weight: bold; }
+.report-modal { text-align: left; }
+.report-modal h2 { text-align: center; margin-bottom: 12px; }
+.report-modal .report-form select,
+.report-modal .report-form textarea { width: 100%; font-size: 16px; margin-bottom: 8px; }

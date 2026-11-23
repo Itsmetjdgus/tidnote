@@ -10,7 +10,7 @@
 
   const { data: post, error } = await db
     .from('posts')
-    .select('id, title, content, author_id, created_at, image_path, images, category, tags, profiles!posts_author_profile_fkey(nickname)')
+    .select('id, title, content, author_id, created_at, image_path, images, category, categories, tags, profiles!posts_author_profile_fkey(nickname)')
     .eq('id', id)
     .maybeSingle();
 
@@ -23,7 +23,6 @@
 
   const { data: sessionData } = await db.auth.getSession();
   const session = sessionData.session;
-  const isOwner = !!session && session.user.id === post.author_id;
 
   const article = document.createElement('article');
   article.className = 'post';
@@ -34,12 +33,12 @@
   const date = document.createElement('p');
   date.className = 'date';
   date.textContent = new Date(post.created_at).toLocaleDateString(dateLocale());
-  if (post.category) {
+  postCategories(post).forEach(function (c, i) {
     const catLink = document.createElement('a');
-    catLink.href = 'index.html?cat=' + encodeURIComponent(post.category);
-    catLink.textContent = categoryLabel(post.category);
-    date.append(' · ', catLink);
-  }
+    catLink.href = 'index.html?cat=' + encodeURIComponent(c);
+    catLink.textContent = categoryLabel(c);
+    date.append(i === 0 ? ' · ' : ', ', catLink);
+  });
 
     const author = document.createElement('p');
   author.className = 'date';
@@ -96,56 +95,22 @@
     fillLikes(likeRow);
   }
 
-  if (isOwner) {
-    const actions = document.createElement('div');
-    actions.className = 'post-actions';
-
-    const editLink = document.createElement('a');
-    editLink.href = 'write.html?id=' + post.id;
-    editLink.textContent = t('post.edit');
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.type = 'button';
-    deleteBtn.className = 'danger';
-    deleteBtn.textContent = t('post.delete');
-
-    deleteBtn.addEventListener('click', async () => {
-      if (!confirm(t('post.confirm_delete'))) return;
-      deleteBtn.disabled = true;
-
-      const { data: deleted, error: deleteError } = await db
-        .from('posts')
-        .delete()
-        .eq('id', post.id)
-        .select('id');
-
-      if (deleteError || !deleted || deleted.length === 0) {
-        alert(t('post.delete_failed'));
-        deleteBtn.disabled = false;
-        return;
-      }
-      
-      const allPhotos = photoPaths.slice();
-      if (post.image_path && allPhotos.indexOf(post.image_path) === -1) allPhotos.push(post.image_path);
-      if (allPhotos.length > 0) {
-        await db.storage.from('post-images').remove(allPhotos);
-      }
-
-      window.location.href = 'index.html';
-    });
-
-    actions.append(editLink, deleteBtn);
-    article.append(actions);
+  // 58일차: 수정·삭제·신고·뒤로 단추 대신 오른쪽 위 ⋯ 메뉴
+  if (typeof createPostMenu === 'function') {
+    article.classList.add('has-menu');
+    article.prepend(createPostMenu({
+      id: post.id,
+      author_id: post.author_id,
+      nickname: post.profiles ? post.profiles.nickname : '',
+      images: photoPaths,
+      image_path: post.image_path,
+    }, {
+      session: session,
+      detail: true,
+      onDeleted: function () { window.location.href = 'index.html'; },
+      onHidden: function () {},
+    }));
   }
-
-   if (session && !isOwner) {
-    article.append(createReportControl('post', post.id));
-  }
-
-  const back = document.createElement('a');
-  back.href = 'index.html';
-  back.textContent = t('post.back');
-  article.append(back);
 
   box.innerHTML = '';
   box.append(article);
