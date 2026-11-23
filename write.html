@@ -25,12 +25,22 @@
             <button type="button" id="draft-load" data-i18n="draft.load"></button>
             <button type="button" id="draft-discard" class="secondary" data-i18n="draft.discard"></button>
         </div>
+        <section id="draft-panel" class="draft-panel" hidden aria-labelledby="draft-panel-title">
+            <div class="draft-panel-head">
+                <h3 id="draft-panel-title" data-i18n="draft.list_title"></h3>
+                <button type="button" id="draft-panel-close" class="icon-btn" data-i18n-aria-label="common.close">×</button>
+            </div>
+            <p class="state-message" data-i18n="draft.list_note"></p>
+            <ul id="draft-list" class="draft-list"></ul>
+        </section>
         <form class="write-form">
             <label for="title" data-i18n="write.label_title"></label>
             <input type="text" id="title" data-i18n-placeholder="write.ph_title" maxlength="100">
 
-            <label for="category" data-i18n="write.label_category"></label>
-            <select id="category"></select>
+            <fieldset class="category-picker">
+                <legend data-i18n="write.label_category"></legend>
+                <div id="category-picker" class="category-chips"></div>
+            </fieldset>
 
             <label for="content" data-i18n="write.label_content"></label>
             <textarea id="content" rows="14" data-i18n-placeholder="write.ph_content" maxlength="20000"></textarea>
@@ -41,11 +51,16 @@
             <ul id="photo-list" class="photo-list"></ul>
 
             <label for="tags" data-i18n="write.label_tags"></label>
-            <input type="text" id="tags" maxlength="150" autocomplete="off" data-i18n-placeholder="write.ph_tags">
+            <input type="text" id="tags" maxlength="1100" autocomplete="off" data-i18n-placeholder="write.ph_tags">
 
-            <p id="draft-status" class="draft-status"></p>
-            <button type="button" id="publish-btn" data-i18n="write.publish"></button>
-            <p id="write-message" class="form-message"></p>
+            <p id="draft-status" class="draft-status" role="status"></p>
+            <div class="write-actions">
+                <div id="draft-actions" class="draft-actions" hidden>
+                    <button type="button" id="draft-save" class="secondary" data-i18n="draft.save"></button><button type="button" id="draft-count" class="secondary draft-count" aria-controls="draft-panel" aria-expanded="false"></button>
+                </div>
+                <button type="button" id="publish-btn" data-i18n="write.publish"></button>
+            </div>
+            <p id="write-message" class="form-message" role="status"></p>
         </form>
     </main>
 

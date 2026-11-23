@@ -1,4 +1,6 @@
-function createReportControl(targetType, targetId) {
+// opts.open: 신고 창(post-menu.js)처럼 양식을 바로 펼쳐 보여 줄 때 true
+function createReportControl(targetType, targetId, opts) {
+  opts = opts || {};
   const wrapper = document.createElement('div');
   wrapper.className = 'report-box';
 
@@ -37,6 +39,12 @@ function createReportControl(targetType, targetId) {
 
   const message = document.createElement('p');
   message.className = 'form-message';
+  message.setAttribute('role', 'status');
+
+  if (opts.open) {
+    toggle.hidden = true;
+    form.hidden = false;
+  }
 
   toggle.addEventListener('click', () => {
     form.hidden = !form.hidden;

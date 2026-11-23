@@ -40,6 +40,7 @@ function createBlockControl(targetId, nickname, relation) {
 
   const msg = document.createElement('p');
   msg.className = 'form-message';
+  msg.setAttribute('role', 'status');
 
   btn.addEventListener('click', async function () {
     const isUnblock = relation === 'blocking';
