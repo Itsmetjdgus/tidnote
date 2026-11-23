@@ -188,3 +188,29 @@ select f.id, f.created_at, f.kind as 종류, pr.nickname as 보낸이, f.message
 
 -- @@13 의견 지우기: 처리가 끝났거나 개인정보가 적혀 있는 의견 한 건 (번호는 블록 12 의 id, 0 → 실제 번호). 지우면 되돌릴 수 없습니다
 delete from feedback where id = 0;
+
+-- @@14 베타 전 보안 점검 ①(읽기 전용): RLS 가 꺼진 public 표. 0줄이어야 정상
+select tablename as rls_꺼짐
+  from pg_tables
+ where schemaname = 'public' and not rowsecurity;
+
+-- @@15 베타 전 보안 점검 ②(읽기 전용): 표마다 정책 수. schema.sql 과 비교 (reports·feedback 은 insert 만, moderation_log 는 0 개가 정상)
+select c.relname as 표, count(p.policyname) as 정책수, string_agg(p.cmd, ',' order by p.cmd) as 종류
+  from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace and n.nspname = 'public'
+  left join pg_policies p on p.schemaname = 'public' and p.tablename = c.relname
+ where c.relkind = 'r'
+ group by c.relname
+ order by c.relname;
+
+-- @@16 베타 전 보안 점검 ③(읽기 전용): 로그인 안 한 사람(anon)도 쓰기(insert/update/delete)가 되는 정책. 0줄이어야 정상
+select tablename as 표, policyname as 정책, cmd as 종류, roles as 대상
+  from pg_policies
+ where schemaname in ('public', 'storage')
+   and cmd in ('INSERT', 'UPDATE', 'DELETE', 'ALL')
+   and (roles @> array['public']::name[] or roles @> array['anon']::name[])
+   and coalesce(qual, '') not like '%auth.uid()%'
+   and coalesce(with_check, '') not like '%auth.uid()%';
+
+-- @@17 베타 전 보안 점검 ④(읽기 전용): 약관 버전. '2027-01-01' 한 줄이어야 정상 (nav.js TERMS_VERSION, terms.html, privacy.html 과 같아야 함)
+select public.current_terms_version() as 약관버전;
