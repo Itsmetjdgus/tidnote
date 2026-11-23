@@ -250,22 +250,8 @@ header nav {
   cursor: pointer;
 }
 
-.pager {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 24px 0;
-}
 
-.pager a {
-  color: var(--link-color);
-  text-decoration: none;
-}
 
-.pager a.disabled {
-  color: #767676;
-  pointer-events: none;
-}
 
 .legal h3 {
   margin: 20px 0 6px;
@@ -845,7 +831,8 @@ header {
   white-space: nowrap;
 }
 .chip:hover { background: var(--main-color); }
-.chip[aria-current="page"] {
+.chip[aria-current="page"],
+.chip.chip-on {
   background: var(--header-text);
   border-color: var(--header-text);
   color: #fff;
@@ -919,9 +906,10 @@ header nav > * {
 }
 
 /* 50일차: 검색창은 어디를 눌러도 테두리 색만 진하게. 두꺼운 바깥 테두리는 키보드(Tab)로 돋보기 단추에 들어왔을 때만 */
+/* 57일차: 마우스·손가락으로 눌렀을 때는 테두리 색을 바꾸지 않는다(남색이 파랗게 보인다는 의견). 금색을 조금 진하게만 */
 .header-search:focus-within {
-  border-color: var(--header-text);
-  box-shadow: 0 0 0 1px var(--header-text);
+  border-color: #9a6f33;
+  box-shadow: none;
 }
 
 .header-search:has(button:focus-visible) {
@@ -1523,14 +1511,7 @@ a.card-author:hover .card-nick { text-decoration: underline; }
 }
 
 @media (max-width: 600px) {
-  /* 페이지 이동, 프로필 숫자(팔로워·팔로잉) 링크도 손가락 크기로 */
-  .pager a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    padding: 0 8px;
-  }
-
+  /* 프로필 숫자(팔로워·팔로잉) 링크도 손가락 크기로 */
   .profile-stats a {
     display: inline-flex;
     align-items: center;
@@ -1544,3 +1525,8 @@ a.card-author:hover .card-nick { text-decoration: underline; }
     padding: 10px 2px;
   }
 }
+
+/* 57일차: 무한 스크롤 */
+.feed-status:empty { display: none; }
+.feed-sentinel { height: 1px; }
+.feed-more { display: block; margin: 8px auto 24px; }

@@ -1076,3 +1076,144 @@ create trigger prepare_feedback_trigger
   for each row execute function public.prepare_feedback();
 
 notify pgrst, 'reload schema';
+
+-- 57~60일차 (2026-11-23): 카테고리 여러 개, 해시태그 개수 완화, 서버 임시저장, 게시물 숨기기
+-- 실행 순서: 이 블록 전체를 SQL Editor 에서 한 번 실행 → 확인 SQL → 코드 병합(푸시)
+
+-- 1) 카테고리 여러 개: categories 배열. 기존 category 열은 첫 번째 카테고리로 자동 유지(옛 코드와 호환)
+alter table posts add column if not exists categories text[] not null default '{}';
+update posts set categories = array[category] where cardinality(categories) = 0;
+create index if not exists posts_categories_idx on posts using gin (categories);
+
+create or replace function public.sync_post_categories()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  c text;
+begin
+  if cardinality(new.categories) = 0 then
+    new.categories := array[coalesce(new.category, 'daily')];
+  end if;
+  if cardinality(new.categories) > 9 then
+    raise exception 'Category limit exceeded';
+  end if;
+  if (select count(distinct x) from unnest(new.categories) x) <> cardinality(new.categories) then
+    raise exception 'Duplicate category';
+  end if;
+  foreach c in array new.categories loop
+    if c is null or c not in ('daily', 'travel', 'food', 'language', 'it', 'hobby', 'study', 'culture', 'etc') then
+      raise exception 'Invalid category';
+    end if;
+  end loop;
+  new.category := new.categories[1];
+  return new;
+end;
+$$;
+
+drop trigger if exists sync_post_categories_trigger on public.posts;
+create trigger sync_post_categories_trigger
+  before insert or update on public.posts
+  for each row execute function public.sync_post_categories();
+
+-- 2) 해시태그: 5개 제한을 50개로 완화(도배 방지용 상한만 남김). 한 태그 1~20자 규칙은 그대로
+create or replace function public.validate_post_tags()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  tag text;
+begin
+  if cardinality(new.tags) > 50 then
+    raise exception 'Tag limit exceeded';
+  end if;
+  foreach tag in array new.tags loop
+    if tag is null or char_length(tag) not between 1 and 20 or tag ~ '[\s#,]' then
+      raise exception 'Invalid tag';
+    end if;
+  end loop;
+  return new;
+end;
+$$;
+
+-- 3) 서버 임시저장: 본인만 읽고 쓰기. 한 사람 20개까지. 사진은 저장하지 않음. 계정 삭제 시 함께 삭제
+create table if not exists post_drafts (
+  id bigint generated always as identity primary key,
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  title text not null default '' check (char_length(title) <= 100),
+  content text not null default '' check (char_length(content) <= 20000),
+  categories text[] not null default '{}' check (cardinality(categories) <= 9),
+  tags text[] not null default '{}' check (cardinality(tags) <= 50),
+  post_id bigint references posts(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists post_drafts_user_idx on post_drafts (user_id, updated_at desc);
+
+alter table post_drafts enable row level security;
+
+drop policy if exists "users read own drafts" on post_drafts;
+create policy "users read own drafts"
+  on post_drafts for select to authenticated using (auth.uid() = user_id);
+drop policy if exists "users add own drafts" on post_drafts;
+create policy "users add own drafts"
+  on post_drafts for insert to authenticated with check (auth.uid() = user_id);
+drop policy if exists "users update own drafts" on post_drafts;
+create policy "users update own drafts"
+  on post_drafts for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "users delete own drafts" on post_drafts;
+create policy "users delete own drafts"
+  on post_drafts for delete to authenticated using (auth.uid() = user_id);
+
+create or replace function public.prepare_draft()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_op = 'UPDATE' then
+    new.user_id := old.user_id;
+    new.created_at := old.created_at;
+  else
+    new.created_at := now();
+    if (select count(*) from public.post_drafts where user_id = new.user_id) >= 20 then
+      raise exception 'Draft limit exceeded';
+    end if;
+  end if;
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+drop trigger if exists prepare_draft_trigger on public.post_drafts;
+create trigger prepare_draft_trigger
+  before insert or update on public.post_drafts
+  for each row execute function public.prepare_draft();
+
+-- 4) 게시물 숨기기("이 게시물 안 보기"): 본인 목록만 읽고 쓰기. 숨긴 사람만 안 보이고 글쓴이는 모름
+create table if not exists hidden_posts (
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  post_id bigint not null references posts(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, post_id)
+);
+
+alter table hidden_posts enable row level security;
+
+drop policy if exists "users read own hidden posts" on hidden_posts;
+create policy "users read own hidden posts"
+  on hidden_posts for select to authenticated using (auth.uid() = user_id);
+drop policy if exists "users hide posts" on hidden_posts;
+create policy "users hide posts"
+  on hidden_posts for insert to authenticated with check (auth.uid() = user_id);
+drop policy if exists "users unhide posts" on hidden_posts;
+create policy "users unhide posts"
+  on hidden_posts for delete to authenticated using (auth.uid() = user_id);
+
+revoke all on post_drafts, hidden_posts from anon;
+
+notify pgrst, 'reload schema';

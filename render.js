@@ -82,8 +82,9 @@ function renderPostCard(post, showAuthor) {
   const date = document.createElement('p');
   date.className = 'date card-meta';
   let dateText = new Date(post.created_at).toLocaleDateString(dateLocale());
-  if (post.category && typeof categoryLabel === 'function') {
-    dateText += ' · ' + categoryLabel(post.category);
+  if (typeof postCategories === 'function') {
+    const labels = postCategories(post).map(categoryLabel);
+    if (labels.length) dateText += ' · ' + labels.join(', ');
   }
   date.textContent = dateText;
   article.append(date);

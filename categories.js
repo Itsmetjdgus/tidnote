@@ -9,3 +9,9 @@ function isCategory(value) {
 function categoryLabel(slug) {
   return isCategory(slug) ? t('cat.' + slug) : '';
 }
+
+// 글의 카테고리 목록: 새 글은 categories 배열, 예전 응답은 category 하나
+function postCategories(post) {
+  const list = Array.isArray(post.categories) && post.categories.length ? post.categories : (post.category ? [post.category] : []);
+  return list.filter(isCategory);
+}
