@@ -1559,3 +1559,57 @@ a.card-author:hover .card-nick { text-decoration: underline; }
     justify-content: center;
   }
 }
+
+/* 52일차: 폰 헤더 마감. 헤더 높이 120px 규칙은 유지하고(위아래 여백을 줄여 자리를 만든다),
+   로고·아이콘·검색창을 누르기 쉬운 40px 이상으로 키운다. 하단 메뉴바는 베타 뒤로 미룬다. */
+@media (max-width: 480px) {
+  header:has(nav) {
+    padding-top: 11px;
+    padding-bottom: 12px;
+  }
+
+  header .brand {
+    min-height: 40px;
+  }
+
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  header a.nav-link,
+  header a.nav-cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+  }
+
+  #header-search select,
+  #header-search input,
+  #header-search button {
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 600px) {
+  /* 페이지 이동, 프로필 숫자(팔로워·팔로잉) 링크도 손가락 크기로 */
+  .pager a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 8px;
+  }
+
+  .profile-stats a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+  }
+
+  /* 바닥글 링크가 단어 중간("도움/말")에서 끊기지 않게 */
+  .footer-links a {
+    display: inline-block;
+    white-space: nowrap;
+    padding: 10px 2px;
+  }
+}
