@@ -1510,3 +1510,52 @@ a.card-author:hover .card-nick { text-decoration: underline; }
   line-height: 1.5;
   color: var(--text-gray);
 }
+
+
+/* 51일차: 폰 화면(폭 600px 이하)에서 손가락으로 누르기 쉬운 크기(44px)로 맞춘다.
+   헤더 검색창은 헤더 높이(120px)를 지키려고 제외한다. */
+@media (max-width: 600px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+  select,
+  textarea:not(.write-form textarea),
+  .follow-btn,
+  .like-btn,
+  main button:not(.icon-btn):not(.link-button),
+  .tabs a {
+    min-height: 44px;
+  }
+
+  #header-search input,
+  #header-search select,
+  #header-search button {
+    min-height: 0;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+  }
+
+  .link-button {
+    min-height: 40px;
+    padding: 10px 8px;
+  }
+
+  .card-author,
+  .card-comments {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+  }
+
+  .write-form button[class^="tool-"] {
+    min-width: 40px;
+  }
+
+  .tabs a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
