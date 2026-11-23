@@ -183,6 +183,98 @@
 
   contentInput.addEventListener('input', updateBadges);
 
+  // ---- 임시저장 (새 글에서만) ----
+  // 제목·본문·카테고리·태그를 이 브라우저(로컬 저장소)에 자동으로 저장한다. 사진은 저장하지 않는다.
+  // 게시하거나, 버리거나, 로그아웃하면 지운다. 서버로는 게시하기 전에 아무것도 보내지 않는다.
+  if (!editId) {
+    const DRAFT_KEY = 'tidnote_draft';
+    const draftBar = document.getElementById('draft-bar');
+    const draftText = document.getElementById('draft-text');
+    const draftStatus = document.getElementById('draft-status');
+    let draftTimer = null;
+    let draftPaused = false;
+
+    function readDraft() {
+      try {
+        const d = JSON.parse(localStorage.getItem(DRAFT_KEY));
+        if (d && d.v === 1 && d.uid === session.user.id && typeof d.title === 'string' && typeof d.content === 'string' && typeof d.tags === 'string') return d;
+      } catch (e) {}
+      return null;
+    }
+    function clearDraft() {
+      try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+    }
+    function saveDraft() {
+      if (draftPaused) return;
+      if (!titleInput.value.trim() && !contentInput.value.trim() && !tagsInput.value.trim()) {
+        clearDraft();
+        draftStatus.textContent = '';
+        return;
+      }
+      try {
+        const at = Date.now();
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({
+          v: 1,
+          uid: session.user.id,
+          title: titleInput.value,
+          content: contentInput.value,
+          category: categoryInput.value,
+          tags: tagsInput.value,
+          at: at,
+        }));
+        draftStatus.textContent = t('draft.saved', { time: new Date(at).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' }) });
+      } catch (e) {
+        draftStatus.textContent = '';
+      }
+    }
+    function scheduleDraft() {
+      if (draftPaused) return;
+      clearTimeout(draftTimer);
+      draftTimer = setTimeout(saveDraft, 800);
+    }
+
+    // 게시에 성공하면 임시저장본을 지우고, 늦게 도착한 저장이 다시 만들지 못하게 멈춘다
+    window.addEventListener('tidnote:published', function () {
+      draftPaused = true;
+      clearTimeout(draftTimer);
+      clearDraft();
+    });
+
+    const saved = readDraft();
+    const nothingYet = !titleInput.value && !contentInput.value && !tagsInput.value;
+    if (saved && nothingYet && (saved.title.trim() || saved.content.trim() || saved.tags.trim())) {
+      // 불러올지 정할 때까지는 자동 저장을 멈춰서, 예전 저장본을 덮어쓰지 않는다
+      draftPaused = true;
+      draftText.textContent = t('draft.found', { time: new Date(saved.at || Date.now()).toLocaleString(dateLocale()) });
+      draftBar.hidden = false;
+      document.getElementById('draft-load').addEventListener('click', function () {
+        titleInput.value = saved.title;
+        // 사진은 저장하지 않았으므로 [사진N] 줄은 뺀다
+        contentInput.value = saved.content.split('\n').filter(function (line) { return !PHOTO_LINE.test(line); }).join('\n');
+        editor.refresh();
+        categoryInput.value = isCategory(saved.category) ? saved.category : 'daily';
+        tagsInput.value = saved.tags;
+        updateBadges();
+        draftBar.hidden = true;
+        draftPaused = false;
+        message.textContent = t('draft.restored');
+        titleInput.focus();
+      });
+      document.getElementById('draft-discard').addEventListener('click', function () {
+        clearDraft();
+        draftBar.hidden = true;
+        draftPaused = false;
+        titleInput.focus();
+      });
+    }
+
+    titleInput.addEventListener('input', scheduleDraft);
+    contentInput.addEventListener('input', scheduleDraft);
+    tagsInput.addEventListener('input', scheduleDraft);
+    categoryInput.addEventListener('change', scheduleDraft);
+  }
+
+
   // 사진 고르기: 크기를 줄여 두고, 글의 커서 위치에 [사진N] 을 넣는다. 서버에는 '게시' 할 때 올린다.
   photoInput.addEventListener('change', async function () {
     const files = Array.from(photoInput.files);
@@ -329,6 +421,7 @@
       await db.storage.from('post-images').remove(obsolete);
     }
 
+    window.dispatchEvent(new Event('tidnote:published'));
     window.location.href = 'post.html?id=' + saved.id;
   });
 })();

@@ -242,6 +242,7 @@ function buildAccountMenu(userId, pendingCount) {
   logout.type = 'button';
   logout.textContent = tt('nav.logout', 'Logout');
   logout.addEventListener('click', async function () {
+    try { localStorage.removeItem('tidnote_draft'); } catch (e) {}
     await db.auth.signOut();
     window.location.href = 'index.html';
   });

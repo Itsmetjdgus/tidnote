@@ -20,6 +20,11 @@
         <h2 id="write-heading" data-i18n="write.heading_new"></h2>
         <p class="notice"><span data-i18n="write.notice"></span> <span data-i18n="write.notice_lead"></span><a href="help.html" data-i18n="footer.help"></a><span data-i18n="write.notice_end"></span></p>
         <p id="privacy-note" class="state-message"></p>
+        <div id="draft-bar" class="notice draft-bar" hidden>
+            <span id="draft-text"></span>
+            <button type="button" id="draft-load" data-i18n="draft.load"></button>
+            <button type="button" id="draft-discard" class="secondary" data-i18n="draft.discard"></button>
+        </div>
         <form class="write-form">
             <label for="title" data-i18n="write.label_title"></label>
             <input type="text" id="title" data-i18n-placeholder="write.ph_title" maxlength="100">
@@ -38,6 +43,7 @@
             <label for="tags" data-i18n="write.label_tags"></label>
             <input type="text" id="tags" maxlength="150" autocomplete="off" data-i18n-placeholder="write.ph_tags">
 
+            <p id="draft-status" class="draft-status"></p>
             <button type="button" id="publish-btn" data-i18n="write.publish"></button>
             <p id="write-message" class="form-message"></p>
         </form>

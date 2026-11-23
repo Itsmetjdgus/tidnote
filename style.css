@@ -986,7 +986,13 @@ header nav > * {
   border-radius: 999px;
 }
 
+/* 50일차: 검색창은 어디를 눌러도 테두리 색만 진하게. 두꺼운 바깥 테두리는 키보드(Tab)로 돋보기 단추에 들어왔을 때만 */
 .header-search:focus-within {
+  border-color: var(--header-text);
+  box-shadow: 0 0 0 1px var(--header-text);
+}
+
+.header-search:has(button:focus-visible) {
   outline: 3px solid var(--header-text);
   outline-offset: 2px;
 }
@@ -1488,3 +1494,19 @@ a.card-author:hover .card-nick { text-decoration: underline; }
 /* 45일차: 약관 재동의 */
 #consent-modal .modal-foot { margin-top: 0.75rem; }
 #consent-modal .link-button { font: inherit; }
+
+/* 50일차: 글쓰기 임시저장 안내 줄 */
+.draft-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.draft-bar[hidden] { display: none; }
+.draft-bar span { flex: 1 1 220px; }
+.draft-status {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-gray);
+}

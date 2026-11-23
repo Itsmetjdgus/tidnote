@@ -224,6 +224,7 @@
       return;
     }
 
+    try { localStorage.removeItem('tidnote_draft'); } catch (e) {}
     try {
       await db.auth.signOut();
     } catch (e) {}
