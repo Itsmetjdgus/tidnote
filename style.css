@@ -1871,3 +1871,86 @@ article.post[data-post-id] .card-meta { padding-right: 44px; }
   cursor: pointer;
 }
 #export-btn:disabled { opacity: 0.6; cursor: wait; }
+
+/* 67일차: 설정을 단계별로(분류 → 항목 목록 → 항목 화면) */
+.settings-list-title { margin: 0 0 8px; }
+.settings-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 10px 4px;
+  border-top: 1px solid #efe7d6;
+  color: var(--header-text);
+  text-decoration: none;
+}
+.settings-rows li:first-child .settings-row { border-top: none; }
+.settings-row:hover { background: #fdf8ec; }
+.settings-row-label { flex: 1; min-width: 0; }
+.settings-row-value {
+  max-width: 45%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-gray);
+  font-size: 14px;
+}
+.settings-chevron { color: var(--text-gray); font-size: 22px; line-height: 1; }
+.danger-row .settings-row-label { color: #b91c1c; }
+.settings-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  margin-bottom: 4px;
+  color: var(--link-color);
+  text-decoration: none;
+  font-size: 15px;
+}
+.settings-back:hover { text-decoration: underline; }
+.settings-item > h3 { margin-top: 4px; }
+/* PC: 왼쪽 분류 목록이 늘 보이므로 "‹ 설정" 줄은 숨긴다 */
+@media (min-width: 601px) {
+  .settings-back-root { display: none; }
+}
+/* 폰: 한 단계씩 */
+@media (max-width: 600px) {
+  .settings-layout[data-level="root"] .settings-content { display: none; }
+  .settings-layout[data-level="list"] .settings-menu,
+  .settings-layout[data-level="item"] .settings-menu { display: none; }
+  .settings-layout[data-level="root"] .settings-menu {
+    flex-direction: column;
+    overflow: visible;
+    padding: 4px 16px;
+    background: white;
+    border-radius: 8px;
+  }
+  .settings-layout[data-level="root"] .settings-menu a {
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    padding: 10px 4px;
+    border-top: 1px solid #efe7d6;
+    border-radius: 0;
+    background: none;
+    color: var(--header-text);
+    font-weight: normal;
+  }
+  .settings-layout[data-level="root"] .settings-menu a:first-child { border-top: none; }
+  .settings-layout[data-level="root"] .settings-menu a::after {
+    content: "›";
+    margin-left: auto;
+    color: var(--text-gray);
+    font-size: 22px;
+  }
+  main > h2.settings-heading-sub { display: none; }
+}
+#settings-error:empty { display: none; }
+@media (max-width: 600px) {
+  .settings-layout[data-level="list"],
+  .settings-layout[data-level="item"] { margin-top: 0; }
+}

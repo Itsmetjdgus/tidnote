@@ -135,20 +135,12 @@
     });
   }
 
-  function loadAll() {
+  // 67일차: 화면(항목)이 열렸을 때 그 목록만 불러온다
+  if (typeof onSettingItemShown === 'function') {
+    onSettingItemShown('liked', loadLiked);
+    onSettingItemShown('hidden', loadHidden);
+  } else if (!panel.hidden) {
     loadLiked();
     loadHidden();
-  }
-
-  if (!panel.hidden) loadAll();
-  else {
-    // 탭을 처음 열 때만 불러온다
-    const obs = new MutationObserver(function () {
-      if (!panel.hidden) {
-        obs.disconnect();
-        loadAll();
-      }
-    });
-    obs.observe(panel, { attributes: true, attributeFilter: ['hidden'] });
   }
 })();

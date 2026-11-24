@@ -17,7 +17,7 @@
   privacyNote.append(t(me.is_private ? 'write.note_private' : 'write.note_public') + ' ');
 
   const changeLink = document.createElement('a');
-  changeLink.href = 'settings.html?tab=privacy';
+  changeLink.href = 'settings.html?tab=privacy&item=visibility';
   changeLink.textContent = t('common.change_settings');
   privacyNote.append(changeLink);
 })();
