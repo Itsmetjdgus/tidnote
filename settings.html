@@ -103,6 +103,22 @@
                             <p id="cscope-message" class="form-message" role="status"></p>
                         </div>
                     </div>
+                    <div class="settings-item" data-item="likes" hidden>
+                        <h3 data-i18n="likesvis.title"></h3>
+                        <p class="state-message" data-i18n="likesvis.desc"></p>
+                        <div id="likesvis-options">
+                            <label class="option">
+                                <input type="radio" name="likesvis" value="public">
+                                <span><strong data-i18n="likesvis.public"></strong> <span data-i18n="likesvis.public_desc"></span></span>
+                            </label>
+                            <label class="option">
+                                <input type="radio" name="likesvis" value="private">
+                                <span><strong data-i18n="likesvis.private"></strong> <span data-i18n="likesvis.private_desc"></span></span>
+                            </label>
+                            <button type="button" id="likesvis-save" data-i18n="settings.save"></button>
+                            <p id="likesvis-message" class="form-message" role="status"></p>
+                        </div>
+                    </div>
                     <div class="settings-item" data-item="blocked" hidden>
                         <h3 data-i18n="block.list_title"></h3>
                         <p data-i18n="block.list_desc"></p>
@@ -220,6 +236,7 @@
     <script src="language-select.js"></script>
     <script src="sessions.js"></script>
     <script src="comment-scope.js"></script>
+    <script src="likes-setting.js"></script>
     <script src="activity.js"></script>
     <script src="categories.js"></script>
     <script src="export.js"></script>

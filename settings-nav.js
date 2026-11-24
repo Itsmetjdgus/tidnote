@@ -13,6 +13,7 @@ const SETTINGS_TREE = {
   privacy: [
     { item: 'visibility', title: 'settings.privacy_title' },
     { item: 'comments', title: 'cscope.title' },
+    { item: 'likes', title: 'likesvis.title' },
     { item: 'blocked', title: 'block.list_title' },
   ],
   activity: [
