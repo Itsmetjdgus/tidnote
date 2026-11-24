@@ -135,7 +135,19 @@ function makeIconLink(href, icon, label) {
   return a;
 }
 
-// ---------- 가운데 검색창: [글 | 닉네임] 선택 + 입력칸 + 돋보기 버튼 ----------
+// ---------- 가운데 검색창: [글 제목 | 닉네임 | 해시태그] 선택 + 입력칸 + 돋보기 버튼 ----------
+// 71일차: 해시태그를 고르면 입력칸 앞에 # 이 고정되고, 스페이스를 두 번 누르면 " #" 이 붙어 태그를 하나 더 쓸 수 있다.
+
+// "여행 #맛집, 카페" → ['여행', '맛집', '카페'] (최대 5개, 각 20자, 영문은 소문자)
+function parseSearchTags(text) {
+  const out = [];
+  String(text || '').split(/[\s#,]+/).forEach(function (raw) {
+    const tag = Array.from(raw).slice(0, 20).join('').toLowerCase();
+    if (tag && out.indexOf(tag) === -1 && out.length < 5) out.push(tag);
+  });
+  return out;
+}
+
 function renderSearch() {
   const h1 = document.querySelector('header h1');
   if (!h1 || document.getElementById('header-search')) return;
@@ -143,6 +155,8 @@ function renderSearch() {
   const pageName = window.location.pathname.split('/').pop() || 'index.html';
   const onPeople = pageName === 'people.html';
   const onHome = pageName === 'index.html';
+  const params = new URLSearchParams(window.location.search);
+  const tagParam = onHome ? parseSearchTags((params.get('tag') || '').replace(/,/g, ' ')) : [];
 
   const form = document.createElement('form');
   form.id = 'header-search';
@@ -151,43 +165,76 @@ function renderSearch() {
 
   const select = document.createElement('select');
   select.setAttribute('aria-label', tt('search.type_label', 'Search type'));
-  [['post', tt('search.type_post', 'Posts')], ['person', tt('search.type_person', 'Nickname')]].forEach(function (o) {
+  [['post', tt('search.type_post', 'Post title')], ['person', tt('search.type_person', 'Nickname')], ['tag', tt('search.type_tag', 'Hashtag')]].forEach(function (o) {
     const opt = document.createElement('option');
     opt.value = o[0];
     opt.textContent = o[1];
     select.append(opt);
   });
-  select.value = onPeople ? 'person' : 'post';
+  select.value = onPeople ? 'person' : tagParam.length ? 'tag' : 'post';
+
+  const hash = document.createElement('span');
+  hash.className = 'search-hash';
+  hash.textContent = '#';
+  hash.setAttribute('aria-hidden', 'true');
 
   const input = document.createElement('input');
   input.type = 'search';
   input.name = 'q';
-  input.maxLength = 50;
+  input.maxLength = 120;
   input.autocomplete = 'off';
   input.setAttribute('aria-label', tt('search.label', 'Search'));
 
-  function updatePlaceholder() {
+  function isTag() { return select.value === 'tag'; }
+
+  function updateMode() {
+    hash.hidden = !isTag();
+    form.classList.toggle('tag-mode', isTag());
     input.placeholder = select.value === 'person'
       ? tt('people.placeholder', 'Search by nickname')
-      : tt('blog.search_ph', 'Search posts');
+      : isTag() ? tt('search.tag_ph', 'Tag (space twice for another)') : tt('blog.search_ph', 'Search post titles');
+    input.setAttribute('aria-label', isTag() ? tt('search.tag_label', 'Search hashtags. Press space twice to add another tag.') : tt('search.label', 'Search'));
   }
-  updatePlaceholder();
-  select.addEventListener('change', updatePlaceholder);
+  select.addEventListener('change', function () {
+    updateMode();
+    input.focus();
+  });
+
+  // 해시태그 칸: 맨 앞의 # 은 고정이므로 지우고, 스페이스 두 번은 " #" 으로 바꾼다
+  input.addEventListener('input', function (e) {
+    if (!isTag() || e.isComposing) return;
+    let v = input.value;
+    const before = v;
+    v = v.replace(/^[#\s]+/, '');
+    if (/ {2}$/.test(v)) {
+      v = v.replace(/\s+$/, '');
+      if (v && !/#$/.test(v)) v += ' #';
+    }
+    if (v !== before) input.value = v;
+  });
 
   // 검색 결과 화면에서는 검색어를 입력칸에 다시 채워 둔다
-  if (onPeople || onHome) {
-    input.value = (new URLSearchParams(window.location.search).get('q') || '').slice(0, 50);
+  if (tagParam.length) {
+    input.value = tagParam.join(' #');
+  } else if (onPeople || onHome) {
+    input.value = (params.get('q') || '').slice(0, 50);
   }
+  updateMode();
 
   const button = document.createElement('button');
   button.type = 'submit';
   button.setAttribute('aria-label', tt('search.label', 'Search'));
   button.append(navIcon('search'));
 
-  form.append(select, input, button);
+  form.append(select, hash, input, button);
 
   form.addEventListener('submit', function (event) {
     event.preventDefault();
+    if (isTag()) {
+      const tags = parseSearchTags(input.value);
+      window.location.href = 'index.html' + (tags.length ? '?tag=' + tags.map(encodeURIComponent).join(',') : '');
+      return;
+    }
     const person = select.value === 'person';
     const q = input.value.trim().slice(0, person ? 20 : 50);
     const target = person ? 'people.html' : 'index.html';
