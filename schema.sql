@@ -1217,3 +1217,60 @@ create policy "users unhide posts"
 revoke all on post_drafts, hidden_posts from anon;
 
 notify pgrst, 'reload schema';
+
+-- 65일차 (2026-11-24): 댓글 허용 범위 (모두 / 팔로워만 / 끄기)
+-- 실행 순서: 이 블록을 SQL Editor 에서 한 번 실행 → 확인 SQL → 코드 병합(푸시)
+-- 이미 달린 댓글은 그대로 보이고, 새 댓글만 막는다. 글쓴이 본인은 범위와 상관없이 자기 글에 댓글을 쓸 수 있다.
+
+-- 1) 설정 열: everyone(모두, 기본) / followers(내가 승인한 팔로워만) / off(아무도 못 씀)
+alter table profiles add column if not exists comment_scope text not null default 'everyone';
+alter table profiles drop constraint if exists profiles_comment_scope_check;
+alter table profiles add constraint profiles_comment_scope_check
+  check (comment_scope in ('everyone', 'followers', 'off'));
+
+-- 2) 지금 로그인한 사람이 이 글에 댓글을 쓸 수 있는가
+create or replace function public.can_comment_on(p_post bigint)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((
+    select
+      p.author_id = auth.uid()
+      or (
+        not public.is_blocked_pair(p.author_id)
+        and (
+          pr.comment_scope = 'everyone'
+          or (
+            pr.comment_scope = 'followers'
+            and exists (
+              select 1 from public.follows f
+              where f.following_id = p.author_id
+                and f.follower_id = auth.uid()
+                and f.status = 'accepted'
+            )
+          )
+        )
+      )
+    from public.posts p
+    join public.profiles pr on pr.id = p.author_id
+    where p.id = p_post
+  ), false);
+$$;
+
+revoke all on function public.can_comment_on(bigint) from public, anon;
+grant execute on function public.can_comment_on(bigint) to authenticated;
+
+-- 3) 댓글 쓰기 규칙 교체: 글을 볼 수 있고 + 글쓴이의 댓글 허용 범위 안일 때만
+drop policy if exists "users can add own comments on viewable posts" on comments;
+create policy "users can add own comments on viewable posts"
+  on comments for insert to authenticated
+  with check (
+    auth.uid() = author_id
+    and exists (select 1 from posts p where p.id = comments.post_id)
+    and public.can_comment_on(comments.post_id)
+  );
+
+notify pgrst, 'reload schema';

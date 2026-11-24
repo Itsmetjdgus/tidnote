@@ -24,6 +24,7 @@
                         <nav class="settings-menu" data-i18n-aria-label="settings.menu_label" aria-label="Settings">
                 <a href="settings.html?tab=account" data-tab="account" data-i18n="settings.menu_account"></a>
                 <a href="settings.html?tab=privacy" data-tab="privacy" data-i18n="settings.menu_privacy"></a>
+                <a href="settings.html?tab=activity" data-tab="activity" data-i18n="activity.menu"></a>
                 <a href="settings.html?tab=security" data-tab="security" data-i18n="settings.menu_security"></a>
                 <a href="settings.html?tab=about" data-tab="about" data-i18n="settings.menu_about"></a>
             </nav>
@@ -79,6 +80,25 @@
                         <p id="privacy-message" class="form-message" role="status"></p>
                     </div>
                     <hr>
+                    <h3 data-i18n="cscope.title"></h3>
+                    <p class="state-message" data-i18n="cscope.desc"></p>
+                    <div id="cscope-options">
+                        <label class="option">
+                            <input type="radio" name="cscope" value="everyone">
+                            <span><strong data-i18n="cscope.everyone"></strong> <span data-i18n="cscope.everyone_desc"></span></span>
+                        </label>
+                        <label class="option">
+                            <input type="radio" name="cscope" value="followers">
+                            <span><strong data-i18n="cscope.followers"></strong> <span data-i18n="cscope.followers_desc"></span></span>
+                        </label>
+                        <label class="option">
+                            <input type="radio" name="cscope" value="off">
+                            <span><strong data-i18n="cscope.off"></strong> <span data-i18n="cscope.off_desc"></span></span>
+                        </label>
+                        <button type="button" id="cscope-save" data-i18n="settings.save"></button>
+                        <p id="cscope-message" class="form-message" role="status"></p>
+                    </div>
+                    <hr>
                     <h3 data-i18n="block.list_title"></h3>
                     <p data-i18n="block.list_desc"></p>
                     <div id="blocked-list"></div>
@@ -86,7 +106,30 @@
                 </section>
 
                 <!-- 보안 -->
+                <!-- 내 활동 -->
+                <section id="tab-activity" class="post settings-panel" hidden>
+                    <h3 data-i18n="activity.liked_title"></h3>
+                    <p class="state-message" data-i18n="activity.liked_desc"></p>
+                    <ul id="liked-list" class="activity-list"></ul>
+                    <p id="liked-message" class="form-message" role="status"></p>
+                    <hr>
+                    <h3 data-i18n="activity.hidden_title"></h3>
+                    <p class="state-message" data-i18n="activity.hidden_desc"></p>
+                    <ul id="hidden-list" class="activity-list"></ul>
+                    <p id="hidden-message" class="form-message" role="status"></p>
+                    <hr>
+                    <h3 data-i18n="export.title"></h3>
+                    <p data-i18n="export.desc"></p>
+                    <button type="button" id="export-btn" data-i18n="export.btn"></button>
+                    <p id="export-message" class="form-message" role="status"></p>
+                </section>
+
                 <section id="tab-security" class="post settings-panel" hidden>
+                    <h3 data-i18n="sessions.title"></h3>
+                    <p data-i18n="sessions.desc"></p>
+                    <button type="button" id="logout-all-btn" class="danger-btn" data-i18n="sessions.btn"></button>
+                    <p id="logout-all-message" class="form-message" role="status"></p>
+                    <hr>
                     <h3 data-i18n="pw.title"></h3>
                     <p data-i18n="pw.desc"></p>
                     <form class="write-form" id="pw-form">
@@ -162,5 +205,10 @@
     <script src="password-change.js"></script>   
     <script src="feedback.js"></script>
     <script src="language-select.js"></script>
+    <script src="sessions.js"></script>
+    <script src="comment-scope.js"></script>
+    <script src="activity.js"></script>
+    <script src="categories.js"></script>
+    <script src="export.js"></script>
 </body>
 </html>

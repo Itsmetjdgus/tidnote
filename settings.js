@@ -10,7 +10,7 @@
   const errorBox = document.getElementById('settings-error');
 
   // ----- 메뉴(탭) -----
-      const TABS = ['account', 'privacy', 'security', 'about'];
+      const TABS = ['account', 'privacy', 'activity', 'security', 'about'];
   let tab = new URLSearchParams(window.location.search).get('tab');
   if (TABS.indexOf(tab) === -1) tab = 'account';
 
