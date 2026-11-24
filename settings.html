@@ -87,6 +87,11 @@
 
                 <!-- 보안 -->
                 <section id="tab-security" class="post settings-panel" hidden>
+                    <h3 data-i18n="sessions.title"></h3>
+                    <p data-i18n="sessions.desc"></p>
+                    <button type="button" id="logout-all-btn" class="danger-btn" data-i18n="sessions.btn"></button>
+                    <p id="logout-all-message" class="form-message" role="status"></p>
+                    <hr>
                     <h3 data-i18n="pw.title"></h3>
                     <p data-i18n="pw.desc"></p>
                     <form class="write-form" id="pw-form">
@@ -162,5 +167,6 @@
     <script src="password-change.js"></script>   
     <script src="feedback.js"></script>
     <script src="language-select.js"></script>
+    <script src="sessions.js"></script>
 </body>
 </html>
