@@ -80,6 +80,25 @@
                         <p id="privacy-message" class="form-message" role="status"></p>
                     </div>
                     <hr>
+                    <h3 data-i18n="cscope.title"></h3>
+                    <p class="state-message" data-i18n="cscope.desc"></p>
+                    <div id="cscope-options">
+                        <label class="option">
+                            <input type="radio" name="cscope" value="everyone">
+                            <span><strong data-i18n="cscope.everyone"></strong> <span data-i18n="cscope.everyone_desc"></span></span>
+                        </label>
+                        <label class="option">
+                            <input type="radio" name="cscope" value="followers">
+                            <span><strong data-i18n="cscope.followers"></strong> <span data-i18n="cscope.followers_desc"></span></span>
+                        </label>
+                        <label class="option">
+                            <input type="radio" name="cscope" value="off">
+                            <span><strong data-i18n="cscope.off"></strong> <span data-i18n="cscope.off_desc"></span></span>
+                        </label>
+                        <button type="button" id="cscope-save" data-i18n="settings.save"></button>
+                        <p id="cscope-message" class="form-message" role="status"></p>
+                    </div>
+                    <hr>
                     <h3 data-i18n="block.list_title"></h3>
                     <p data-i18n="block.list_desc"></p>
                     <div id="blocked-list"></div>
@@ -187,6 +206,7 @@
     <script src="feedback.js"></script>
     <script src="language-select.js"></script>
     <script src="sessions.js"></script>
+    <script src="comment-scope.js"></script>
     <script src="activity.js"></script>
     <script src="categories.js"></script>
     <script src="export.js"></script>

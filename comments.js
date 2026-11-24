@@ -99,7 +99,24 @@
     return box;
   }
 
-  if (me) {
+  // 65일차: 글쓴이의 댓글 허용 범위. 막혀 있으면 입력칸 대신 안내를 보여 준다(실제로 막는 일은 DB 규칙)
+  let blockedReason = null;
+  if (me && me !== post.author_id) {
+    try {
+      const { data: allowed, error: rpcError } = await db.rpc('can_comment_on', { p_post: postId });
+      if (!rpcError && allowed === false) {
+        const { data: author } = await db.from('profiles').select('comment_scope').eq('id', post.author_id).maybeSingle();
+        blockedReason = author && author.comment_scope === 'followers' ? t('cscope.closed_followers') : t('cscope.closed_off');
+      }
+    } catch (e) {}
+  }
+
+  if (me && blockedReason) {
+    const closed = document.createElement('p');
+    closed.className = 'state-message comment-closed';
+    closed.textContent = blockedReason;
+    section.append(closed);
+  } else if (me) {
     const form = document.createElement('form');
     form.className = 'write-form comment-form';
 
@@ -134,7 +151,8 @@
       button.disabled = false;
 
       if (error) {
-        message.textContent = t('comments.post_failed');
+        // 쓰는 사이에 글쓴이가 범위를 바꿨을 때 등: DB 규칙에 막힘
+        message.textContent = error.code === '42501' ? t('cscope.closed_now') : t('comments.post_failed');
         return;
       }
 
