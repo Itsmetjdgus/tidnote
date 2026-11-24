@@ -20,6 +20,10 @@
   }
   let current = data.comment_scope || 'everyone';
   radios.forEach(function (r) { r.checked = r.value === current; });
+  function showValue() {
+    if (typeof setSettingValue === 'function') setSettingValue('comments', t('cscope.' + current));
+  }
+  showValue();
 
   save.addEventListener('click', async function () {
     const picked = box.querySelector('input[name="cscope"]:checked');
@@ -36,6 +40,7 @@
       return;
     }
     current = picked.value;
+    showValue();
     msg.className = 'form-message ok';
     msg.textContent = t('settings.saved');
   });

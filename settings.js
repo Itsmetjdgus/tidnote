@@ -9,20 +9,7 @@
 
   const errorBox = document.getElementById('settings-error');
 
-  // ----- 메뉴(탭) -----
-      const TABS = ['account', 'privacy', 'activity', 'security', 'about'];
-  let tab = new URLSearchParams(window.location.search).get('tab');
-  if (TABS.indexOf(tab) === -1) tab = 'account';
-
-  document.querySelectorAll('.settings-menu a').forEach(function (a) {
-    if (a.dataset.tab === tab) {
-      a.classList.add('active');
-      a.setAttribute('aria-current', 'page');
-    }
-  });
-  TABS.forEach(function (name) {
-    document.getElementById('tab-' + name).hidden = name !== tab;
-  });
+  // 메뉴(분류·항목) 나누기는 settings-nav.js 가 한다(67일차)
 
   // ----- 내 프로필 읽기 -----
   const { data: profile, error } = await db
@@ -43,6 +30,7 @@
   const nicknameMessage = document.getElementById('nickname-message');
 
   nicknameInput.value = profile.nickname;
+  setSettingValue('nickname', profile.nickname);
 
   nicknameForm.addEventListener('submit', async function (event) {
     event.preventDefault();
@@ -80,6 +68,7 @@
     }
 
     nicknameInput.value = updated.nickname;
+    setSettingValue('nickname', updated.nickname);
     nicknameMessage.className = 'form-message ok';
     nicknameMessage.textContent = t('settings.saved');
   });
@@ -99,6 +88,7 @@
     radios.forEach(function (radio) {
       radio.checked = radio.value === current;
     });
+    setSettingValue('visibility', t(current === 'private' ? 'settings.private' : 'settings.public'));
   }
 
   showCurrent();
