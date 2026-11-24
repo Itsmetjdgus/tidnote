@@ -101,7 +101,7 @@ function openReportDialog(targetType, targetId) {
 
   const title = document.createElement('h2');
   title.id = 'report-modal-title';
-  title.textContent = t('menu.report_title');
+  title.textContent = t(targetType === 'comment' ? 'cmenu.report_title' : 'menu.report_title');
 
   const control = createReportControl(targetType, targetId, { open: true });
   dialog.append(closeBtn, title, control);
@@ -131,21 +131,17 @@ function openReportDialog(targetType, targetId) {
   if (first) first.focus();
 }
 
-// 메뉴 단추와 목록을 만든다.
-// post: { id, author_id, nickname, images?, image_path? }
-// opts: { session, onDeleted(), onHidden(), detail: 글 화면이면 true }
-function createPostMenu(post, opts) {
-  const session = opts.session;
-  const isOwner = !!session && session.user.id === post.author_id;
-
+// ⋯ 단추 + 목록(공용). build(item) 은 처음 열 때 한 번 불리며, item(글자, 누르면 할 일, 빨간색?) 으로 줄을 넣는다.
+// 69일차: 게시물과 댓글이 같이 쓴다. extraClass 로 위치·크기만 다르게 한다.
+function createDotsMenu(build, extraClass, label) {
   const wrap = document.createElement('div');
-  wrap.className = 'post-menu';
+  wrap.className = 'post-menu' + (extraClass ? ' ' + extraClass : '');
 
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'icon-btn post-menu-btn';
-  button.setAttribute('aria-label', t('menu.more'));
-  button.title = t('menu.more');
+  button.setAttribute('aria-label', label || t('menu.more'));
+  button.title = label || t('menu.more');
   button.setAttribute('aria-haspopup', 'menu');
   button.setAttribute('aria-expanded', 'false');
   const ns = 'http://www.w3.org/2000/svg';
@@ -171,11 +167,11 @@ function createPostMenu(post, opts) {
   list.setAttribute('role', 'menu');
   list.hidden = true;
 
-  function item(label, onClick, danger) {
+  function item(text, onClick, danger) {
     const b = document.createElement('button');
     b.type = 'button';
     b.setAttribute('role', 'menuitem');
-    b.textContent = label;
+    b.textContent = text;
     if (danger) b.className = 'danger-text';
     b.addEventListener('click', function () {
       close(false);
@@ -186,9 +182,76 @@ function createPostMenu(post, opts) {
   }
 
   let built = false;
-  async function build() {
+  async function ensureBuilt() {
     if (built) return;
     built = true;
+    await build(item);
+    const cancel = item(t('menu.cancel'), function () {});
+    cancel.classList.add('post-menu-cancel');
+  }
+
+  function onDocClick(e) {
+    if (!wrap.contains(e.target)) close(false);
+  }
+  function onKey(e) {
+    const items = Array.from(list.querySelectorAll('[role="menuitem"]')).filter(function (el) { return el.offsetParent !== null; });
+    const i = items.indexOf(document.activeElement);
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close(true);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      items[(i + 1) % items.length].focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      items[(i - 1 + items.length) % items.length].focus();
+    } else if (e.key === 'Tab') {
+      close(false);
+    }
+  }
+
+  async function open() {
+    await ensureBuilt();
+    list.hidden = false;
+    backdrop.hidden = false;
+    wrap.classList.add('open');
+    button.setAttribute('aria-expanded', 'true');
+    document.addEventListener('click', onDocClick, true);
+    document.addEventListener('keydown', onKey);
+    const first = list.querySelector('[role="menuitem"]');
+    if (first) first.focus();
+  }
+
+  function close(returnFocus) {
+    list.hidden = true;
+    backdrop.hidden = true;
+    wrap.classList.remove('open');
+    button.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('click', onDocClick, true);
+    document.removeEventListener('keydown', onKey);
+    if (returnFocus) button.focus();
+  }
+
+  button.addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (list.hidden) open();
+    else close(true);
+  });
+  backdrop.addEventListener('click', function () { close(true); });
+
+  wrap.append(button, backdrop, list);
+  return wrap;
+}
+
+// 게시물 메뉴.
+// post: { id, author_id, nickname, images?, image_path? }
+// opts: { session, onDeleted(), onHidden(), onUnhidden(), detail: 글 화면이면 true }
+function createPostMenu(post, opts) {
+  const session = opts.session;
+  const isOwner = !!session && session.user.id === post.author_id;
+
+  return createDotsMenu(async function (item) {
     if (isOwner) {
       item(t('post.edit'), function () { window.location.href = 'write.html?id=' + post.id; });
       item(t('post.delete'), async function () {
@@ -240,62 +303,7 @@ function createPostMenu(post, opts) {
       item(t('menu.profile'), function () { window.location.href = 'author.html?id=' + post.author_id; });
     }
     item(t('menu.copy_link'), function () { copyPostLink(post.id); });
-    const cancel = item(t('menu.cancel'), function () {});
-    cancel.classList.add('post-menu-cancel');
-  }
-
-  function onDocClick(e) {
-    if (!wrap.contains(e.target)) close(false);
-  }
-  function onKey(e) {
-    const items = Array.from(list.querySelectorAll('[role="menuitem"]')).filter(function (el) { return el.offsetParent !== null; });
-    const i = items.indexOf(document.activeElement);
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      close(true);
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      items[(i + 1) % items.length].focus();
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      items[(i - 1 + items.length) % items.length].focus();
-    } else if (e.key === 'Tab') {
-      close(false);
-    }
-  }
-
-  async function open() {
-    await build();
-    list.hidden = false;
-    backdrop.hidden = false;
-    wrap.classList.add('open');
-    button.setAttribute('aria-expanded', 'true');
-    document.addEventListener('click', onDocClick, true);
-    document.addEventListener('keydown', onKey);
-    const first = list.querySelector('[role="menuitem"]');
-    if (first) first.focus();
-  }
-
-  function close(returnFocus) {
-    list.hidden = true;
-    backdrop.hidden = true;
-    wrap.classList.remove('open');
-    button.setAttribute('aria-expanded', 'false');
-    document.removeEventListener('click', onDocClick, true);
-    document.removeEventListener('keydown', onKey);
-    if (returnFocus) button.focus();
-  }
-
-  button.addEventListener('click', function (e) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (list.hidden) open();
-    else close(true);
   });
-  backdrop.addEventListener('click', function () { close(true); });
-
-  wrap.append(button, backdrop, list);
-  return wrap;
 }
 
 // 홈 카드에 메뉴 붙이기: renderPostCard가 남긴 data-* 값을 읽는다

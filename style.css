@@ -2011,3 +2011,64 @@ article.post[data-post-id] .card-meta { padding-right: 44px; }
 .notif-actions button.secondary { background: white; color: var(--header-text); }
 .notif-more { display: block; margin: 16px auto; min-height: 44px; padding: 8px 18px; }
 #notif-bell[aria-current="page"] { background: rgba(31, 53, 82, 0.1); }
+
+/* 69일차: 댓글 - 프로필 사진 + 이름 · 시각 + 오른쪽 ⋯ 메뉴 */
+.comment {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 48px 14px 16px;
+}
+.comment[hidden] { display: none; }
+.comment-avatar { flex: none; text-decoration: none; }
+.comment-main { flex: 1; min-width: 0; }
+.comment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  margin: 0 0 4px;
+}
+.comment-meta a.comment-name {
+  color: var(--header-text);
+  font-weight: bold;
+  text-decoration: none;
+}
+.comment-meta a.comment-name:hover { text-decoration: underline; }
+.comment-badge {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--main-color);
+  color: var(--header-text);
+  font-size: 12px;
+  font-weight: normal;
+  vertical-align: 1px;
+}
+.comment-when { font-size: 13px; color: var(--text-gray); }
+.comment-text { margin: 0; }
+.post-menu.comment-menu { top: 6px; right: 4px; }
+.comment-menu .post-menu-btn { width: 40px; height: 40px; }
+.comment-hidden { opacity: 0.6; }
+.comment-hidden-bar { text-align: left; padding: 4px 0 8px; }
+
+/* 70일차: 글 화면을 메인 카드와 같은 모양으로 */
+.post-detail .card-author,
+.post-detail .card-meta { padding-right: 44px; }
+.post-detail .post-title {
+  margin: 4px 0 14px;
+  font-size: 26px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.post-detail .post-content { margin-top: 4px; }
+.post-detail .tag-row { margin: 16px 0 0; }
+.post-detail .post-foot {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #efe7d6;
+}
+@media (max-width: 600px) {
+  .post-detail .post-title { font-size: 22px; }
+}

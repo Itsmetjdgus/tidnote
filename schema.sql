@@ -1461,3 +1461,29 @@ revoke all on function public.mark_notifications_read(bigint[]) from public, ano
 grant execute on function public.mark_notifications_read(bigint[]) to authenticated;
 
 notify pgrst, 'reload schema';
+
+-- 69일차 (2026-11-24): 댓글 숨기기("이 댓글 나한테 숨기기")
+-- 실행 순서: 이 블록을 SQL Editor 에서 한 번 실행 → 확인 SQL → 코드 병합(푸시)
+-- 숨긴 사람에게만 안 보이고, 댓글 쓴 사람·다른 사람은 모른다. 댓글이 지워지면 함께 지워진다.
+create table if not exists hidden_comments (
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  comment_id bigint not null references comments(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, comment_id)
+);
+
+alter table hidden_comments enable row level security;
+
+drop policy if exists "users read own hidden comments" on hidden_comments;
+create policy "users read own hidden comments"
+  on hidden_comments for select to authenticated using (auth.uid() = user_id);
+drop policy if exists "users hide comments" on hidden_comments;
+create policy "users hide comments"
+  on hidden_comments for insert to authenticated with check (auth.uid() = user_id);
+drop policy if exists "users unhide comments" on hidden_comments;
+create policy "users unhide comments"
+  on hidden_comments for delete to authenticated using (auth.uid() = user_id);
+
+revoke all on hidden_comments from anon;
+
+notify pgrst, 'reload schema';
