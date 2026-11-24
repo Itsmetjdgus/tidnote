@@ -2111,3 +2111,15 @@ article.post[data-post-id] .card-meta { padding-right: 44px; }
 @media (max-width: 600px) {
   .like-count-btn { min-height: 44px; min-width: 36px; }
 }
+
+/* 71일차: 검색창 해시태그 모드 - 맨 앞 # 고정 */
+.search-hash {
+  flex: none;
+  padding: 0 0 0 12px;
+  color: var(--header-text);
+  font-size: 17px;
+  font-weight: bold;
+  line-height: 1;
+}
+.search-hash[hidden] { display: none; }
+.header-search.tag-mode input { padding-left: 4px; }

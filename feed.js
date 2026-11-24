@@ -1,4 +1,4 @@
-// 홈 화면의 글 목록: 최신순, 아래로 내리면 계속 불러옴(무한 스크롤), ?q= 검색, ?cat=a,b 카테고리(여러 개), ?tag= 해시태그, ?view=following 팔로잉 글만
+// 홈 화면의 글 목록: 최신순, 아래로 내리면 계속 불러옴(무한 스크롤), ?q= 검색, ?cat=a,b 카테고리(여러 개), ?tag=a,b 해시태그(여러 개면 모두 달린 글), ?q= 는 글 제목에서 찾음, ?view=following 팔로잉 글만
 const PAGE_SIZE = 10; // 한 번에 불러오는 글 수
 const FOLLOW_LIMIT = 100; // 팔로잉 탭은 최근에 팔로우한 100명까지만 본다(주소가 너무 길어지지 않게)
 
@@ -79,7 +79,7 @@ function renderTagFilter(rawQuery, cats, tag, view) {
   box.innerHTML = '';
   box.hidden = !tag;
   if (!tag) return;
-  box.append(t('tag.filter', { tag: tag }) + ' ');
+  box.append(t('tag.filter', { tag: tag.split(',').join(' #') }) + ' ');
   const clear = document.createElement('a');
   clear.href = feedUrl(rawQuery, cats, '', view);
   clear.textContent = t('tag.clear');
@@ -105,7 +105,8 @@ async function loadPosts() {
   const rawQuery = (params.get('q') || '').slice(0, 50);
   const keyword = rawQuery.replace(/[%_,()*\\]/g, ' ').trim();
   const cats = parseCats(params.get('cat')); // 목록에 없는 값은 빼고, 비면 "전체"
-  const tag = Array.from((params.get('tag') || '').replace(/[\s#,]/g, '')).slice(0, 20).join('').toLowerCase();
+  // 71일차: 해시태그 여러 개(쉼표로 구분). tag 는 "여행,맛집" 같은 글자로 두고 쓸 때 나눈다
+  const tag = parseSearchTags((params.get('tag') || '').replace(/,/g, ' ')).join(',');
 
   // 팔로잉 보기는 로그인했을 때만. 로그아웃 상태에서 주소로 들어오면 그냥 전체 보기로 본다
   let session = null;
@@ -180,9 +181,9 @@ async function loadPosts() {
       .from('posts')
       .select('id, title, content, author_id, created_at, image_path, category, categories, tags, comments(count), profiles!posts_author_profile_fkey(nickname, avatar_path)');
     if (followingIds) query = query.in('author_id', followingIds);
-    if (keyword) query = query.or('title.ilike.%' + keyword + '%,content.ilike.%' + keyword + '%');
+    if (keyword) query = query.ilike('title', '%' + keyword + '%'); // 71일차: "글 제목" 검색
     if (cats.length) query = query.overlaps('categories', cats);
-    if (tag) query = query.contains('tags', [tag]);
+    if (tag) query = query.contains('tags', tag.split(','));
     if (hiddenIds.length) query = query.not('id', 'in', '(' + hiddenIds.join(',') + ')');
     if (cursor) {
       const at = '"' + cursor.created_at + '"';
