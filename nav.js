@@ -97,6 +97,7 @@ const NAV_ICONS = {
   user: [['circle', { cx: 12, cy: 8, r: 4 }], ['path', { d: 'M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7' }]],
   comment: [['path', { d: 'M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4 4v-4H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z' }]],
   heart: [['path', { d: 'M12 21C5 16.5 2.5 12.5 2.5 9a5 5 0 0 1 9.5-2.2A5 5 0 0 1 21.5 9c0 3.5-2.5 7.5-9.5 12z' }]],
+  bell: [['path', { d: 'M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z' }], ['path', { d: 'M10 20.5a2 2 0 0 0 4 0' }]],
 };
 
 function navIcon(name, size) {
@@ -324,7 +325,51 @@ async function renderNav() {
     .eq('following_id', session.user.id)
     .eq('status', 'pending');
 
+  nav.append(buildNotifBell());
   nav.append(buildAccountMenu(session.user.id, pendingCount || 0));
+  refreshNotifBadge();
+  // 화면을 보고 있는 동안 1분마다 새 알림 수를 확인한다
+  setInterval(function () {
+    if (document.visibilityState === 'visible') refreshNotifBadge();
+  }, 60000);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') refreshNotifBadge();
+  });
+}
+
+// ---------- 68일차: 알림 종 아이콘 + 안 읽은 알림 수 ----------
+function buildNotifBell() {
+  const a = makeIconLink('notifications.html', 'bell', tt('nav.notifications', 'Notifications'));
+  a.id = 'notif-bell';
+  if (window.location.pathname.endsWith('notifications.html')) a.setAttribute('aria-current', 'page');
+  return a;
+}
+
+async function refreshNotifBadge() {
+  const bell = document.getElementById('notif-bell');
+  if (!bell) return;
+  let n = 0;
+  try {
+    const { count, error } = await db
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .is('read_at', null);
+    if (!error) n = count || 0;
+  } catch (e) {}
+  let badge = bell.querySelector('.count-badge');
+  if (n > 0) {
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'count-badge';
+      bell.append(badge);
+    }
+    badge.textContent = n > 9 ? '9+' : String(n);
+  } else if (badge) {
+    badge.remove();
+  }
+  const label = tt('nav.notifications', 'Notifications') + (n > 0 ? ' (' + n + ')' : '');
+  bell.setAttribute('aria-label', label);
+  bell.title = label;
 }
 
 renderNav();

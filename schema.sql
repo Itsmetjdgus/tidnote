@@ -1274,3 +1274,190 @@ create policy "users can add own comments on viewable posts"
   );
 
 notify pgrst, 'reload schema';
+
+-- 68일차 (2026-11-24): 알림센터
+-- 실행 순서: 이 블록을 SQL Editor 에서 한 번 실행 → 확인 SQL → 코드 병합(푸시)
+-- 알림은 DB가 자동으로 만든다(댓글·좋아요·팔로우가 생길 때). 사용자는 읽기·읽음 표시·지우기만 할 수 있다.
+-- 차단 관계면 알림을 만들지 않는다. 90일이 지난 알림은 새 알림이 생길 때 지운다.
+
+-- 1) 알림 표
+create table if not exists notifications (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references profiles(id) on delete cascade,   -- 받는 사람
+  actor_id uuid not null references profiles(id) on delete cascade,  -- 한 사람
+  type text not null check (type in ('comment', 'like', 'follow_request', 'follow', 'follow_accept')),
+  post_id bigint references posts(id) on delete cascade,
+  comment_id bigint references comments(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  read_at timestamptz,
+  check (user_id <> actor_id)
+);
+
+create index if not exists notifications_user_idx on notifications (user_id, created_at desc);
+create index if not exists notifications_unread_idx on notifications (user_id) where read_at is null;
+
+alter table notifications enable row level security;
+
+drop policy if exists "users read own notifications" on notifications;
+create policy "users read own notifications"
+  on notifications for select to authenticated using (auth.uid() = user_id);
+drop policy if exists "users delete own notifications" on notifications;
+create policy "users delete own notifications"
+  on notifications for delete to authenticated using (auth.uid() = user_id);
+
+-- 쓰기·고치기는 DB 함수만(사용자가 가짜 알림을 만들 수 없게)
+revoke insert, update on notifications from anon, authenticated;
+revoke all on notifications from anon;
+
+-- 2) 알림 하나 만들기(내부용). 자기 자신·차단 관계면 만들지 않는다
+create or replace function public.add_notification(p_user uuid, p_actor uuid, p_type text, p_post bigint, p_comment bigint)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if p_user is null or p_actor is null or p_user = p_actor then
+    return;
+  end if;
+  if exists (
+    select 1 from public.blocks b
+    where (b.blocker_id = p_user and b.blocked_id = p_actor)
+       or (b.blocker_id = p_actor and b.blocked_id = p_user)
+  ) then
+    return;
+  end if;
+  -- 같은 글에 같은 사람이 좋아요를 눌렀다 껐다 반복해도 알림은 하나만
+  if p_type = 'like' and exists (
+    select 1 from public.notifications n
+    where n.user_id = p_user and n.actor_id = p_actor and n.type = 'like' and n.post_id = p_post
+  ) then
+    return;
+  end if;
+  insert into public.notifications (user_id, actor_id, type, post_id, comment_id)
+  values (p_user, p_actor, p_type, p_post, p_comment);
+  -- 오래된 알림 정리(90일)
+  delete from public.notifications
+  where user_id = p_user and created_at < now() - interval '90 days';
+end;
+$$;
+
+revoke all on function public.add_notification(uuid, uuid, text, bigint, bigint) from public, anon, authenticated;
+
+-- 3) 댓글이 달리면 → 글쓴이에게
+create or replace function public.notify_on_comment()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.add_notification(
+    (select p.author_id from public.posts p where p.id = new.post_id),
+    new.author_id, 'comment', new.post_id, new.id);
+  return new;
+end;
+$$;
+drop trigger if exists notify_on_comment_trigger on public.comments;
+create trigger notify_on_comment_trigger
+  after insert on public.comments
+  for each row execute function public.notify_on_comment();
+
+-- 4) 좋아요 → 글쓴이에게
+create or replace function public.notify_on_like()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.add_notification(
+    (select p.author_id from public.posts p where p.id = new.post_id),
+    new.user_id, 'like', new.post_id, null);
+  return new;
+end;
+$$;
+drop trigger if exists notify_on_like_trigger on public.post_likes;
+create trigger notify_on_like_trigger
+  after insert on public.post_likes
+  for each row execute function public.notify_on_like();
+
+-- 5) 팔로우: 요청(비공개 계정) / 바로 팔로우(공개 계정) / 요청 수락 → 요청한 사람에게
+create or replace function public.notify_on_follow()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_op = 'INSERT' then
+    perform public.add_notification(new.following_id, new.follower_id,
+      case when new.status = 'pending' then 'follow_request' else 'follow' end, null, null);
+  elsif tg_op = 'UPDATE' and old.status = 'pending' and new.status = 'accepted' then
+    -- 요청 알림은 "팔로우 시작"으로 바꾸고, 요청한 사람에게 "수락됨" 알림
+    update public.notifications set type = 'follow'
+    where user_id = new.following_id and actor_id = new.follower_id and type = 'follow_request';
+    perform public.add_notification(new.follower_id, new.following_id, 'follow_accept', null, null);
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists notify_on_follow_trigger on public.follows;
+create trigger notify_on_follow_trigger
+  after insert or update of status on public.follows
+  for each row execute function public.notify_on_follow();
+
+-- 요청을 거절·취소하면 요청 알림도 지운다
+create or replace function public.clear_follow_notification()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  delete from public.notifications
+  where user_id = old.following_id and actor_id = old.follower_id and type = 'follow_request';
+  return old;
+end;
+$$;
+drop trigger if exists clear_follow_notification_trigger on public.follows;
+create trigger clear_follow_notification_trigger
+  after delete on public.follows
+  for each row execute function public.clear_follow_notification();
+
+-- 차단하면 두 사람 사이의 알림을 모두 지운다
+create or replace function public.clear_block_notifications()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  delete from public.notifications
+  where (user_id = new.blocker_id and actor_id = new.blocked_id)
+     or (user_id = new.blocked_id and actor_id = new.blocker_id);
+  return new;
+end;
+$$;
+drop trigger if exists clear_block_notifications_trigger on public.blocks;
+create trigger clear_block_notifications_trigger
+  after insert on public.blocks
+  for each row execute function public.clear_block_notifications();
+
+-- 6) 읽음 표시: 내 알림만(빈 목록이면 전부)
+create or replace function public.mark_notifications_read(p_ids bigint[] default null)
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  update public.notifications
+  set read_at = now()
+  where user_id = auth.uid()
+    and read_at is null
+    and (p_ids is null or id = any (p_ids));
+$$;
+revoke all on function public.mark_notifications_read(bigint[]) from public, anon;
+grant execute on function public.mark_notifications_read(bigint[]) to authenticated;
+
+notify pgrst, 'reload schema';
