@@ -194,7 +194,7 @@ select tablename as rls_꺼짐
   from pg_tables
  where schemaname = 'public' and not rowsecurity;
 
--- @@15 베타 전 보안 점검 ②(읽기 전용): 표마다 정책 수. schema.sql 과 비교 (reports·feedback 은 insert 만, moderation_log 는 0 개가 정상)
+-- @@15 베타 전 보안 점검 ②(읽기 전용): 표마다 정책 수. schema.sql 과 비교 (reports·feedback 은 insert 만, moderation_log 는 0 개, notifications 는 select·delete 만이 정상)
 select c.relname as 표, count(p.policyname) as 정책수, string_agg(p.cmd, ',' order by p.cmd) as 종류
   from pg_class c
   join pg_namespace n on n.oid = c.relnamespace and n.nspname = 'public'
@@ -216,8 +216,8 @@ select tablename as 표, policyname as 정책, cmd as 종류, roles as 대상
 select public.current_terms_version() as 약관버전;
 
 -- @@18 베타 전 보안 점검 ⑤(읽기 전용): 함수 실행 권한. anon 실행 = true 인 함수는 로그인 없이 부를 수 있음
---      정상: is_blocked_pair, can_view_author 와 트리거 함수(handle_*, prepare_*, sync_*, limit_*, protect_*)만 true.
---      delete_my_account, accept_terms, hidden_user_ids, get_block_relation 이 true 이면 문제(schema.sql 의 revoke 를 다시 실행)
+--      정상: is_blocked_pair, can_view_author 와 트리거 함수(handle_*, prepare_*, sync_*, limit_*, protect_*, notify_*, clear_*, validate_*)만 true.
+--      delete_my_account, accept_terms, hidden_user_ids, get_block_relation, can_comment_on, add_notification, mark_notifications_read 가 true 이면 문제(schema.sql 의 revoke 를 다시 실행)
 select p.proname as 함수,
        p.prosecdef as 보안정의자,
        has_function_privilege('anon', p.oid, 'execute') as anon_실행,

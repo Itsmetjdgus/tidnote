@@ -1954,3 +1954,60 @@ article.post[data-post-id] .card-meta { padding-right: 44px; }
   .settings-layout[data-level="list"],
   .settings-layout[data-level="item"] { margin-top: 0; }
 }
+
+/* 68일차: 알림센터 */
+.notif-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: white;
+  border-radius: 8px;
+}
+.notif-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 14px;
+  border-top: 1px solid #efe7d6;
+}
+.notif-item:first-child { border-top: none; }
+.notif-item.unread { background: #fdf6e3; }
+.notif-link {
+  flex: 1 1 240px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--header-text);
+  text-decoration: none;
+}
+.notif-link:hover .notif-text { text-decoration: underline; }
+.notif-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.notif-text { overflow-wrap: anywhere; line-height: 1.5; }
+.notif-item.unread .notif-text::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #b91c1c;
+  vertical-align: middle;
+}
+.notif-when { font-size: 13px; }
+.notif-actions { display: flex; gap: 8px; margin-left: auto; color: var(--text-gray); font-size: 14px; }
+.notif-actions button {
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px solid var(--header-text);
+  border-radius: 6px;
+  background: var(--header-text);
+  color: white;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.notif-actions button.secondary { background: white; color: var(--header-text); }
+.notif-more { display: block; margin: 16px auto; min-height: 44px; padding: 8px 18px; }
+#notif-bell[aria-current="page"] { background: rgba(31, 53, 82, 0.1); }
