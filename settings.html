@@ -24,6 +24,7 @@
                         <nav class="settings-menu" data-i18n-aria-label="settings.menu_label" aria-label="Settings">
                 <a href="settings.html?tab=account" data-tab="account" data-i18n="settings.menu_account"></a>
                 <a href="settings.html?tab=privacy" data-tab="privacy" data-i18n="settings.menu_privacy"></a>
+                <a href="settings.html?tab=activity" data-tab="activity" data-i18n="activity.menu"></a>
                 <a href="settings.html?tab=security" data-tab="security" data-i18n="settings.menu_security"></a>
                 <a href="settings.html?tab=about" data-tab="about" data-i18n="settings.menu_about"></a>
             </nav>
@@ -86,6 +87,14 @@
                 </section>
 
                 <!-- 보안 -->
+                <!-- 내 활동 -->
+                <section id="tab-activity" class="post settings-panel" hidden>
+                    <h3 data-i18n="activity.hidden_title"></h3>
+                    <p class="state-message" data-i18n="activity.hidden_desc"></p>
+                    <ul id="hidden-list" class="activity-list"></ul>
+                    <p id="hidden-message" class="form-message" role="status"></p>
+                </section>
+
                 <section id="tab-security" class="post settings-panel" hidden>
                     <h3 data-i18n="sessions.title"></h3>
                     <p data-i18n="sessions.desc"></p>
@@ -168,5 +177,6 @@
     <script src="feedback.js"></script>
     <script src="language-select.js"></script>
     <script src="sessions.js"></script>
+    <script src="activity.js"></script>
 </body>
 </html>
