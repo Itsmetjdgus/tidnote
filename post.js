@@ -10,7 +10,7 @@
 
   const { data: post, error } = await db
     .from('posts')
-    .select('id, title, content, author_id, created_at, image_path, images, category, categories, tags, profiles!posts_author_profile_fkey(nickname)')
+    .select('id, title, content, author_id, created_at, image_path, images, category, categories, tags, comments(count), profiles!posts_author_profile_fkey(nickname, avatar_path)')
     .eq('id', id)
     .maybeSingle();
 
@@ -27,11 +27,20 @@
   const article = document.createElement('article');
   article.className = 'post';
 
-  const h2 = document.createElement('h2');
-  h2.textContent = post.title;
+  // 70일차: 메인 카드와 같은 순서 — [프로필 사진 + 닉네임] / 날짜 · 카테고리 / 제목 / 본문 / 좋아요 · 댓글 수 · 해시태그
+  article.classList.add('post-detail');
+  const name = post.profiles && post.profiles.nickname ? post.profiles.nickname : t('post.anonymous');
+  const who = document.createElement(post.author_id && post.profiles ? 'a' : 'span');
+  who.className = 'card-author';
+  if (post.author_id && post.profiles) who.href = 'author.html?id=' + post.author_id;
+  if (typeof createAvatar === 'function') who.append(createAvatar(name, post.profiles ? post.profiles.avatar_path : null, true));
+  const nick = document.createElement('span');
+  nick.className = 'card-nick';
+  nick.textContent = name;
+  who.append(nick);
 
   const date = document.createElement('p');
-  date.className = 'date';
+  date.className = 'date card-meta';
   date.textContent = new Date(post.created_at).toLocaleDateString(dateLocale());
   postCategories(post).forEach(function (c, i) {
     const catLink = document.createElement('a');
@@ -40,17 +49,9 @@
     date.append(i === 0 ? ' · ' : ', ', catLink);
   });
 
-    const author = document.createElement('p');
-  author.className = 'date';
-  author.append(t('post.by_label'));
-  if (post.author_id && post.profiles) {
-    const authorLink = document.createElement('a');
-    authorLink.href = 'author.html?id=' + post.author_id;
-    authorLink.textContent = post.profiles.nickname;
-    author.append(authorLink);
-  } else {
-    author.append(t('post.anonymous'));
-  }
+  const h2 = document.createElement('h2');
+  h2.className = 'post-title';
+  h2.textContent = post.title;
 
   const body = document.createElement('div');
   body.className = 'post-content';
@@ -59,7 +60,20 @@
   const coverInBody = coverNumber > 0 && mdPlacedPhotos(post.content).indexOf(coverNumber) !== -1;
   body.append(renderMarkdown(post.content, photoPaths.map(function (path) { return { path: path }; })));
 
-  article.append(h2, date, author);
+  article.append(who, date, h2);
+
+
+  if (post.image_path && !coverInBody) {
+    const img = document.createElement('img');
+    img.dataset.imagePath = post.image_path; // 실제 주소는 fillPostImages가 채운다
+    img.alt = post.title;
+    img.className = 'post-image';
+    img.loading = 'lazy';
+    article.append(img);
+  }
+
+  article.append(body);
+  fillPostImages(article);
 
   if (Array.isArray(post.tags) && post.tags.length > 0) {
     const tagRow = document.createElement('p');
@@ -75,25 +89,23 @@
     article.append(tagRow);
   }
 
-  if (post.image_path && !coverInBody) {
-    const img = document.createElement('img');
-    img.dataset.imagePath = post.image_path; // 실제 주소는 fillPostImages가 채운다
-    img.alt = post.title;
-    img.className = 'post-image';
-    img.loading = 'lazy';
-    article.append(img);
-  }
-
-  article.append(body);
-  fillPostImages(article);
-
-  if (typeof createLikeButton === 'function') {
-    const likeRow = document.createElement('div');
-    likeRow.className = 'post-like-row';
-    likeRow.append(createLikeButton(post.id));
-    article.append(likeRow);
-    fillLikes(likeRow);
-  }
+  // 아래 줄: 좋아요 · 댓글 수 (메인 카드와 같은 모양)
+  const foot = document.createElement('div');
+  foot.className = 'card-foot post-foot';
+  if (typeof createLikeButton === 'function') foot.append(createLikeButton(post.id));
+  const count = post.comments && post.comments[0] && post.comments[0].count ? post.comments[0].count : 0;
+  const commentsLink = document.createElement('a');
+  commentsLink.className = 'card-comments';
+  commentsLink.href = '#comments';
+  commentsLink.setAttribute('aria-label', t('post.comment_count', { n: count }));
+  commentsLink.title = t('post.comment_count', { n: count });
+  if (typeof navIcon === 'function') commentsLink.append(navIcon('comment', 18));
+  const num = document.createElement('span');
+  num.textContent = String(count);
+  commentsLink.append(num);
+  foot.append(commentsLink);
+  article.append(foot);
+  if (typeof fillLikes === 'function') fillLikes(foot);
 
   // 58일차: 수정·삭제·신고·뒤로 단추 대신 오른쪽 위 ⋯ 메뉴
   if (typeof createPostMenu === 'function') {

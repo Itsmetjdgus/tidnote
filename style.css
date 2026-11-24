@@ -2052,3 +2052,23 @@ article.post[data-post-id] .card-meta { padding-right: 44px; }
 .comment-menu .post-menu-btn { width: 40px; height: 40px; }
 .comment-hidden { opacity: 0.6; }
 .comment-hidden-bar { text-align: left; padding: 4px 0 8px; }
+
+/* 70일차: 글 화면을 메인 카드와 같은 모양으로 */
+.post-detail .card-author,
+.post-detail .card-meta { padding-right: 44px; }
+.post-detail .post-title {
+  margin: 4px 0 14px;
+  font-size: 26px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.post-detail .post-content { margin-top: 4px; }
+.post-detail .tag-row { margin: 16px 0 0; }
+.post-detail .post-foot {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #efe7d6;
+}
+@media (max-width: 600px) {
+  .post-detail .post-title { font-size: 22px; }
+}
