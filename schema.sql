@@ -1625,3 +1625,71 @@ create trigger set_post_lang_trigger
   for each row execute function public.set_post_lang();
 
 notify pgrst, 'reload schema';
+
+-- 79일차 (2026-11-28): 인스타그램식 "번역 보기"(DeepL) — 언어 판별 보강 + 번역 저장
+-- 실행 순서: 이 블록 실행 → 확인 SQL → 서버 함수(translate) 배포 → 코드 병합(푸시)
+-- 화면에 언어 표시는 하지 않는다. lang 은 "번역 보기 단추를 보여 줄지" 정하는 데만 쓴다.
+
+-- 1) 언어 판별 보강: 한국어·영어에 더해 일본어(가나)·중국어(한자) 구분
+create or replace function public.detect_post_lang(p_title text, p_content text)
+returns text
+language plpgsql
+immutable
+set search_path = ''
+as $$
+declare
+  body text;
+  h integer; l integer; kana integer; han integer;
+begin
+  body := coalesce(p_title, '') || ' ' || coalesce(p_content, '');
+  body := regexp_replace(body, '\(https?://[^)\s]*\)', ' ', 'g');
+  body := regexp_replace(body, 'https?://\S+', ' ', 'g');
+  body := regexp_replace(body, '\[(사진|photo)\d{1,2}\]', ' ', 'gi');
+  h := char_length(regexp_replace(body, '[^가-힣ㄱ-ㅎㅏ-ㅣ]', '', 'g'));
+  l := char_length(regexp_replace(body, '[^A-Za-z]', '', 'g'));
+  kana := char_length(regexp_replace(body, '[^ぁ-ゟ゠-ヿ]', '', 'g'));
+  han := char_length(regexp_replace(body, '[^一-鿿]', '', 'g'));
+  if kana > 0 and kana * 3 >= h + l then
+    return 'ja';
+  elsif han > 0 and han * 2 >= h * 3 + l then
+    return 'zh';
+  elsif h = 0 and l = 0 then
+    return 'other';
+  elsif h * 3 >= l then
+    return 'ko';
+  else
+    return 'en';
+  end if;
+end;
+$$;
+
+alter table posts drop constraint if exists posts_lang_check;
+alter table posts add constraint posts_lang_check check (lang in ('ko', 'en', 'ja', 'zh', 'other'));
+update posts set lang = public.detect_post_lang(title, content);
+
+-- 2) 번역 저장(같은 글을 같은 언어로 두 번 번역하지 않게). 서버 함수만 읽고 쓴다(사용자 직접 접근 없음)
+create table if not exists post_translations (
+  post_id bigint not null references posts(id) on delete cascade,
+  target text not null check (char_length(target) between 2 and 7),
+  source_hash text not null,
+  title text not null,
+  content text not null,
+  detected text,
+  created_at timestamptz not null default now(),
+  primary key (post_id, target)
+);
+alter table post_translations enable row level security;
+revoke all on post_translations from anon, authenticated;
+
+-- 3) 번역 사용 기록(한 사람이 하루에 너무 많이 쓰지 못하게, 무료 한도 보호). 30일 지난 기록은 서버 함수가 지운다
+create table if not exists translation_log (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  chars integer not null check (chars >= 0),
+  created_at timestamptz not null default now()
+);
+create index if not exists translation_log_user_idx on translation_log (user_id, created_at desc);
+alter table translation_log enable row level security;
+revoke all on translation_log from anon, authenticated;
+
+notify pgrst, 'reload schema';

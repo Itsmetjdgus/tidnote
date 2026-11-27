@@ -13,35 +13,15 @@ function parseCats(raw) {
 }
 
 // 검색어(q)·카테고리(cats 배열)·해시태그(tag)·보기(view)를 담은 홈 주소를 만든다
-// 78일차: 글 언어 거르기(ko / en). 다른 칩·탭을 눌러도 고른 언어는 유지된다
-let feedLang = '';
-
-function feedUrl(q, cats, tag, view, lang) {
+function feedUrl(q, cats, tag, view) {
   const next = new URLSearchParams();
-  const l = lang === undefined ? feedLang : lang;
   if (q) next.set('q', q);
   if (cats && cats.length) next.set('cat', cats.join(','));
   if (tag) next.set('tag', tag);
   if (view === 'following') next.set('view', 'following');
-  if (l) next.set('lang', l);
   const text = next.toString().replace(/%2C/g, ',');
   return 'index.html' + (text ? '?' + text : '');
 }
-// 78일차: [모든 언어 | 한국어 | English] 고르기
-function renderLangBar(rawQuery, cats, tag, view) {
-  const bar = document.getElementById('lang-bar');
-  if (!bar) return;
-  bar.innerHTML = '';
-  bar.setAttribute('aria-label', t('lang.filter_label'));
-  [['', t('lang.all')], ['ko', '한국어'], ['en', 'English']].forEach(function (item) {
-    const a = document.createElement('a');
-    a.href = feedUrl(rawQuery, cats, tag, view, item[0]);
-    a.textContent = item[1];
-    if (item[0] === feedLang) a.setAttribute('aria-current', 'true');
-    bar.append(a);
-  });
-}
-
 // 로그인했을 때만: 목록 맨 위의 [전체 | 팔로잉] 탭. 누르면 검색·카테고리·태그는 지우고 처음 화면으로 간다
 function renderFeedTabs(view) {
   const bar = document.getElementById('feed-tabs');
@@ -125,7 +105,6 @@ async function loadPosts() {
   const rawQuery = (params.get('q') || '').slice(0, 50);
   const keyword = rawQuery.replace(/[%_,()*\\]/g, ' ').trim();
   const cats = parseCats(params.get('cat')); // 목록에 없는 값은 빼고, 비면 "전체"
-  feedLang = ['ko', 'en'].indexOf(params.get('lang')) !== -1 ? params.get('lang') : '';
   // 71일차: 해시태그 여러 개(쉼표로 구분). tag 는 "여행,맛집" 같은 글자로 두고 쓸 때 나눈다
   const tag = parseSearchTags((params.get('tag') || '').replace(/,/g, ' ')).join(',');
 
@@ -138,7 +117,6 @@ async function loadPosts() {
   const view = session && params.get('view') === 'following' ? 'following' : '';
 
   if (session) renderFeedTabs(view);
-  renderLangBar(rawQuery, cats, tag, view);
   renderCategoryBar(rawQuery, cats, tag, view);
   renderTagFilter(rawQuery, cats, tag, view);
 
@@ -198,16 +176,13 @@ async function loadPosts() {
   moreBtn.textContent = t('feed.more');
   moreBtn.hidden = true;
 
-  // 78일차 SQL(lang 열)을 실행하기 전에 이 코드가 먼저 배포돼도 목록이 깨지지 않게, 열이 없으면 lang 없이 다시 읽는다
-  let hasLang = true;
   function buildQuery() {
     let query = db
       .from('posts')
-      .select('id, title, content, author_id, created_at, image_path, images, category, categories, tags, ' + (hasLang ? 'lang, ' : '') + 'comments(count), profiles!posts_author_profile_fkey(nickname, avatar_path)');
+      .select('id, title, content, author_id, created_at, image_path, images, category, categories, tags, comments(count), profiles!posts_author_profile_fkey(nickname, avatar_path)');
     if (followingIds) query = query.in('author_id', followingIds);
     if (keyword) query = query.ilike('title', '%' + keyword + '%'); // 71일차: "글 제목" 검색
     if (cats.length) query = query.overlaps('categories', cats);
-    if (feedLang && hasLang) query = query.eq('lang', feedLang);
     if (tag) query = query.overlaps('tags', tag.split(',')); // 73일차: 태그 중 하나라도 달린 글
     if (hiddenIds.length) query = query.not('id', 'in', '(' + hiddenIds.join(',') + ')');
     if (cursor) {
@@ -223,11 +198,7 @@ async function loadPosts() {
     moreBtn.hidden = true;
     status.textContent = t('common.loading');
 
-    let { data, error } = await buildQuery();
-    if (error && hasLang && /lang/.test(error.message || '')) {
-      hasLang = false;
-      ({ data, error } = await buildQuery());
-    }
+    const { data, error } = await buildQuery();
     loading = false;
 
     if (error) {

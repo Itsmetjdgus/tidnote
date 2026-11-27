@@ -26,12 +26,11 @@
   const postsHeading = document.getElementById('posts-heading');
   postsHeading.textContent = t('profile.posts_of', { name: profile.nickname });
 
-  // 78일차: lang 열이 아직 없으면(SQL 실행 전) 빼고 다시 읽는다
-  const COLS = 'id, title, content, created_at, image_path, images, category, categories, tags, comments(count)';
-  let { data: posts, error: postsError } = await db.from('posts').select(COLS + ', lang').eq('author_id', authorId).order('created_at', { ascending: false });
-  if (postsError && /lang/.test(postsError.message || '')) {
-    ({ data: posts, error: postsError } = await db.from('posts').select(COLS).eq('author_id', authorId).order('created_at', { ascending: false }));
-  }
+  const { data: posts, error: postsError } = await db
+    .from('posts')
+    .select('id, title, content, created_at, image_path, images, category, categories, tags, comments(count)')
+    .eq('author_id', authorId)
+    .order('created_at', { ascending: false });
 
   if (postsError) {
     list.textContent = t('blog.load_failed');
