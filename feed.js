@@ -179,7 +179,7 @@ async function loadPosts() {
   function buildQuery() {
     let query = db
       .from('posts')
-      .select('id, title, content, author_id, created_at, image_path, category, categories, tags, comments(count), profiles!posts_author_profile_fkey(nickname, avatar_path)');
+      .select('id, title, content, author_id, created_at, image_path, images, category, categories, tags, comments(count), profiles!posts_author_profile_fkey(nickname, avatar_path)');
     if (followingIds) query = query.in('author_id', followingIds);
     if (keyword) query = query.ilike('title', '%' + keyword + '%'); // 71일차: "글 제목" 검색
     if (cats.length) query = query.overlaps('categories', cats);

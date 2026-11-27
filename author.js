@@ -28,7 +28,7 @@
 
   const { data: posts, error: postsError } = await db
     .from('posts')
-    .select('id, title, content, created_at, image_path, category, categories, tags, comments(count)')
+    .select('id, title, content, created_at, image_path, images, category, categories, tags, comments(count)')
     .eq('author_id', authorId)
     .order('created_at', { ascending: false });
 

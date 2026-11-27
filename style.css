@@ -2144,3 +2144,83 @@ header h1 .app-back {
   cursor: pointer;
 }
 #install-btn[hidden] { display: none; }
+
+/* 77일차: 카드 사진을 크게 + 옆으로 넘겨 보기 */
+.card-photos {
+  position: relative;
+  margin: 4px 0 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #efe7d6;
+}
+.card-photos-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.card-photos-track::-webkit-scrollbar { display: none; }
+.card-photos-track:focus-visible { outline: 3px solid var(--header-text); outline-offset: -3px; }
+.card-photo {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  aspect-ratio: 4 / 3;
+  display: block;
+}
+.card-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.card-photos-count {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 12px;
+}
+.card-photos-dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  pointer-events: none;
+}
+.card-photos-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+}
+.card-photos-dots span.on { background: #fff; }
+.card-photos-nav {
+  position: absolute;
+  top: 50%;
+  width: 36px;
+  height: 36px;
+  margin-top: -18px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--header-text);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.card-photos-nav.prev { left: 8px; }
+.card-photos-nav.next { right: 8px; }
+.card-photos-nav[hidden] { display: none; }
+.card-photos-nav:focus-visible { outline: 3px solid var(--header-text); outline-offset: 2px; }
+/* 폰은 손가락으로 넘기므로 단추를 숨긴다(키보드 사용자는 사진 칸에서 ← → 키) */
+@media (hover: none) {
+  .card-photos-nav { display: none !important; }
+}
