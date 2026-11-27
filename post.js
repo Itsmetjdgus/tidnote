@@ -49,10 +49,6 @@
     catLink.textContent = categoryLabel(c);
     date.append(i === 0 ? ' · ' : ', ', catLink);
   });
-  if (typeof langBadge === 'function') {
-    const badge = langBadge(post.lang);
-    if (badge) date.append(' ', badge);
-  }
 
   const h2 = document.createElement('h2');
   h2.className = 'post-title';
@@ -80,12 +76,12 @@
   article.append(body);
   fillPostImages(article);
 
-  // 78일차: 글이 지금 화면 언어와 다르면 "번역 보기"(구글 번역 사이트에서 열림, 무료)
-  const viewLang = typeof getLang === 'function' ? getLang() : 'ko';
-  if (post.lang && post.lang !== viewLang) {
-    const tr = translateLink(post.title, post.content, viewLang);
-    if (tr) article.append(tr);
+  // 79일차: 인스타그램처럼 본문 아래 작은 "번역 보기". 글 언어가 기기 언어와 다를 때만 보인다
+  if (post.lang && typeof createTranslateToggle === 'function') {
+    const toggle = createTranslateToggle(post, h2, body, photoPaths);
+    if (toggle) article.append(toggle);
   }
+
 
   if (Array.isArray(post.tags) && post.tags.length > 0) {
     const tagRow = document.createElement('p');
@@ -139,31 +135,3 @@
   box.innerHTML = '';
   box.append(article);
 })();
-// 78일차: 구글 번역 링크. 서식 기호·사진 자리는 빼고 글자만 보낸다(주소 길이 때문에 앞 4,000자까지)
-function translateLink(title, content, target) {
-  const plain = String(content || '').replace(/\r\n?/g, '\n').split('\n').map(function (line) {
-    if (/^\[(사진|photo)\d{1,2}\][ \t]*$/i.test(line) || /^[ \t]*---+[ \t]*$/.test(line)) return '';
-    return line
-      .replace(/^#{2,3}[ \t]+/, '').replace(/^>[ \t]?/, '').replace(/^-[ \t]+/, '• ')
-      .replace(/\[([^\]\n]{1,200})\]\((https?:\/\/[^\s()]{1,500})\)/g, '$1')
-      .replace(/\*\*\*|\*\*|~~/g, '').replace(/\*([^\s*][^*\n]*?)\*/g, '$1');
-  }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
-  let text = (title ? title + '\n\n' : '') + plain;
-  const cut = text.length > 4000;
-  if (cut) text = text.slice(0, 4000);
-  if (!text.trim()) return null;
-  const p = document.createElement('p');
-  p.className = 'translate-row';
-  const a = document.createElement('a');
-  a.className = 'translate-link';
-  a.href = 'https://translate.google.com/?sl=auto&tl=' + (target === 'en' ? 'en' : 'ko') + '&op=translate&text=' + encodeURIComponent(text);
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  a.textContent = '🌐 ' + t('lang.translate');
-  p.append(a);
-  const note = document.createElement('span');
-  note.className = 'translate-note';
-  note.textContent = ' ' + t(cut ? 'lang.translate_cut' : 'lang.translate_note');
-  p.append(note);
-  return p;
-}
