@@ -2123,3 +2123,24 @@ article.post[data-post-id] .card-meta { padding-right: 44px; }
 }
 .search-hash[hidden] { display: none; }
 .header-search.tag-mode input { padding-left: 4px; }
+
+/* 76일차: 홈 화면 설치(PWA) */
+header h1 .app-back {
+  margin-right: 4px;
+  font-size: 30px;
+  line-height: 1;
+  color: var(--header-text);
+}
+.install-steps { margin: 4px 0 12px; padding-left: 1.4em; line-height: 1.7; }
+#install-btn {
+  min-height: 44px;
+  margin: 4px 0 12px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  background: var(--link-color);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+#install-btn[hidden] { display: none; }

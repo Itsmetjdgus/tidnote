@@ -471,3 +471,37 @@ function renderBrand() {
 
 renderBrand();
 renderSearch();
+renderAppBack();
+registerServiceWorker();
+
+// ---------- 76일차: 홈 화면에 설치한 앱(PWA)으로 열었을 때 ----------
+// 앱처럼 열면 주소창과 뒤로 단추가 없으므로, 메인이 아닌 화면에서는 로고 앞에 "‹" 뒤로 단추를 둔다.
+function isStandaloneApp() {
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+}
+
+function renderAppBack() {
+  if (!isStandaloneApp()) return;
+  const h1 = document.querySelector('header h1');
+  const page = window.location.pathname.split('/').pop() || 'index.html';
+  if (!h1 || page === 'index.html' || h1.querySelector('.app-back')) return;
+  const back = document.createElement('button');
+  back.type = 'button';
+  back.className = 'icon-btn app-back';
+  back.setAttribute('aria-label', tt('nav.back', 'Back'));
+  back.title = tt('nav.back', 'Back');
+  back.textContent = '‹';
+  back.addEventListener('click', function () {
+    if (window.history.length > 1) window.history.back();
+    else window.location.href = 'index.html';
+  });
+  h1.prepend(back);
+}
+
+// 서비스 워커: 홈 화면 설치에 필요하다. 사이트 파일은 저장하지 않고, 오프라인 안내만 한다(sw.js)
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator) || window.location.protocol !== 'https:') return;
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js', { scope: './' }).catch(function (e) { console.error(e); });
+  });
+}

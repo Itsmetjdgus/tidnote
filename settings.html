@@ -7,6 +7,8 @@
     <meta name="robots" content="noindex">
     <link rel="icon" href="favicon-64.png" type="image/png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="apple-mobile-web-app-title" content="Tidnote">
     <title data-i18n="title.settings">Settings - Tidnote</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -191,6 +193,24 @@
 
                 <!-- 정보 -->
                 <section id="tab-about" class="post settings-panel" hidden>
+                    <div class="settings-item" data-item="install" hidden>
+                        <h3 data-i18n="install.title"></h3>
+                        <p data-i18n="install.desc"></p>
+                        <p id="install-done" class="form-message ok" hidden data-i18n="install.already"></p>
+                        <button type="button" id="install-btn" hidden data-i18n="install.btn"></button>
+                        <h4 data-i18n="install.ios_title"></h4>
+                        <ol class="install-steps">
+                            <li data-i18n="install.ios_1"></li>
+                            <li data-i18n="install.ios_2"></li>
+                            <li data-i18n="install.ios_3"></li>
+                        </ol>
+                        <h4 data-i18n="install.android_title"></h4>
+                        <ol class="install-steps">
+                            <li data-i18n="install.android_1"></li>
+                            <li data-i18n="install.android_2"></li>
+                        </ol>
+                        <p class="state-message" data-i18n="install.note"></p>
+                    </div>
                     <div class="settings-item" data-item="contact" hidden>
                         <h3 data-i18n="settings.about_contact"></h3>
                         <p data-i18n="contact.desc"></p>
@@ -237,6 +257,7 @@
     <script src="sessions.js"></script>
     <script src="comment-scope.js"></script>
     <script src="likes-setting.js"></script>
+    <script src="install.js"></script>
     <script src="activity.js"></script>
     <script src="categories.js"></script>
     <script src="export.js"></script>
