@@ -1487,3 +1487,81 @@ create policy "users unhide comments"
 revoke all on hidden_comments from anon;
 
 notify pgrst, 'reload schema';
+
+-- 72일차 (2026-11-25): 좋아요 수 공개 설정
+-- 실행 순서: 이 블록을 SQL Editor 에서 한 번 실행 → 확인 SQL → 코드 병합(푸시)
+-- 공개(기본): 누구나 좋아요 수와 누른 사람 목록을 볼 수 있다.
+-- 비공개: 글쓴이 본인만 수와 목록을 본다. 다른 사람에게는 서버가 숫자를 주지 않는다(좋아요 누르기는 그대로 된다).
+
+-- 1) 설정 열
+alter table profiles add column if not exists likes_public boolean not null default true;
+
+-- 2) 지금 로그인한 사람(로그아웃이면 null)이 이 글의 좋아요 수·목록을 볼 수 있는가
+create or replace function public.can_see_likes(p_post bigint)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((
+    select
+      p.author_id = auth.uid()
+      or (pr.likes_public and public.can_view_author(p.author_id))
+    from public.posts p
+    join public.profiles pr on pr.id = p.author_id
+    where p.id = p_post
+  ), false);
+$$;
+
+revoke all on function public.can_see_likes(bigint) from public;
+grant execute on function public.can_see_likes(bigint) to anon, authenticated;
+
+-- 3) 숫자 표: 볼 수 있을 때만 읽힘
+drop policy if exists "read counts of viewable posts" on post_like_counts;
+create policy "read counts of viewable posts"
+  on post_like_counts for select
+  using (public.can_see_likes(post_like_counts.post_id));
+
+-- 4) 여러 글의 좋아요 정보 한 번에: 볼 수 있으면 숫자(없으면 0), 볼 수 없으면 null
+create or replace function public.get_like_info(p_ids bigint[])
+returns table (post_id bigint, like_count integer)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select p.id,
+         case when public.can_see_likes(p.id)
+              then coalesce((select c.like_count from public.post_like_counts c where c.post_id = p.id), 0)
+              else null end
+  from public.posts p
+  where p.id = any (p_ids[1:100])
+    and public.can_view_author(p.author_id);
+$$;
+
+revoke all on function public.get_like_info(bigint[]) from public;
+grant execute on function public.get_like_info(bigint[]) to anon, authenticated;
+
+-- 5) 좋아요를 누른 사람 목록(최근 순, 최대 300명). 볼 수 없으면 빈 목록, 차단 관계인 사람은 빼고 보여 준다
+create or replace function public.get_post_likers(p_post bigint)
+returns table (user_id uuid, nickname text, avatar_path text, liked_at timestamptz)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select pr.id, pr.nickname, pr.avatar_path, l.created_at
+  from public.post_likes l
+  join public.profiles pr on pr.id = l.user_id
+  where l.post_id = p_post
+    and public.can_see_likes(p_post)
+    and not public.is_blocked_pair(l.user_id)
+  order by l.created_at desc
+  limit 300;
+$$;
+
+revoke all on function public.get_post_likers(bigint) from public;
+grant execute on function public.get_post_likers(bigint) to anon, authenticated;
+
+notify pgrst, 'reload schema';

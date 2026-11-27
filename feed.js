@@ -1,4 +1,4 @@
-// 홈 화면의 글 목록: 최신순, 아래로 내리면 계속 불러옴(무한 스크롤), ?q= 검색, ?cat=a,b 카테고리(여러 개), ?tag=a,b 해시태그(여러 개면 모두 달린 글), ?q= 는 글 제목에서 찾음, ?view=following 팔로잉 글만
+// 홈 화면의 글 목록: 최신순, 아래로 내리면 계속 불러옴(무한 스크롤), ?q= 검색, ?cat=a,b 카테고리(여러 개), ?tag=a,b 해시태그(여러 개면 하나라도 달린 글), ?q= 는 글 제목에서 찾음, ?view=following 팔로잉 글만
 const PAGE_SIZE = 10; // 한 번에 불러오는 글 수
 const FOLLOW_LIMIT = 100; // 팔로잉 탭은 최근에 팔로우한 100명까지만 본다(주소가 너무 길어지지 않게)
 
@@ -79,7 +79,7 @@ function renderTagFilter(rawQuery, cats, tag, view) {
   box.innerHTML = '';
   box.hidden = !tag;
   if (!tag) return;
-  box.append(t('tag.filter', { tag: tag.split(',').join(' #') }) + ' ');
+  box.append(t('tag.filter', { tag: tag.split(',').join(t('tag.or') + '#') }) + ' ');
   const clear = document.createElement('a');
   clear.href = feedUrl(rawQuery, cats, '', view);
   clear.textContent = t('tag.clear');
@@ -183,7 +183,7 @@ async function loadPosts() {
     if (followingIds) query = query.in('author_id', followingIds);
     if (keyword) query = query.ilike('title', '%' + keyword + '%'); // 71일차: "글 제목" 검색
     if (cats.length) query = query.overlaps('categories', cats);
-    if (tag) query = query.contains('tags', tag.split(','));
+    if (tag) query = query.overlaps('tags', tag.split(',')); // 73일차: 태그 중 하나라도 달린 글
     if (hiddenIds.length) query = query.not('id', 'in', '(' + hiddenIds.join(',') + ')');
     if (cursor) {
       const at = '"' + cursor.created_at + '"';

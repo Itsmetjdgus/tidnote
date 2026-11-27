@@ -2073,6 +2073,45 @@ article.post[data-post-id] .card-meta { padding-right: 44px; }
   .post-detail .post-title { font-size: 22px; }
 }
 
+/* 72일차: 좋아요 [♡][숫자] 두 단추, 좋아요한 사람 목록 */
+.like-wrap { display: inline-flex; align-items: center; gap: 0; }
+.card-foot .like-wrap { margin-left: -6px; }
+.card-foot .like-wrap .like-btn { margin-left: 0; }
+.like-count-btn {
+  min-width: 28px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-gray);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.like-count-btn[hidden] { display: none; }
+.like-count-btn:hover { color: var(--header-text); text-decoration: underline; }
+.like-count-btn:focus-visible { outline: 2px solid var(--header-text); outline-offset: 2px; }
+.likers-modal { text-align: left; }
+.likers-modal h2 { text-align: center; margin-bottom: 12px; }
+.likers-list { list-style: none; margin: 0; padding: 0; max-height: 60vh; overflow-y: auto; }
+.likers-list li { border-top: 1px solid #efe7d6; }
+.likers-list li:first-child { border-top: none; }
+.liker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 6px 4px;
+  color: var(--header-text);
+  font-weight: bold;
+  text-decoration: none;
+}
+.liker:hover span { text-decoration: underline; }
+@media (max-width: 600px) {
+  .like-count-btn { min-height: 44px; min-width: 36px; }
+}
+
 /* 71일차: 검색창 해시태그 모드 - 맨 앞 # 고정 */
 .search-hash {
   flex: none;
