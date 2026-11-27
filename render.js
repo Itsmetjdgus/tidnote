@@ -177,6 +177,10 @@ function renderPostCard(post, showAuthor) {
     if (labels.length) dateText += ' · ' + labels.join(', ');
   }
   date.textContent = dateText;
+  if (typeof langBadge === 'function') {
+    const badge = langBadge(post.lang);
+    if (badge) date.append(' ', badge);
+  }
   article.append(date);
 
   const link = document.createElement('a');
@@ -238,4 +242,15 @@ function renderPostCard(post, showAuthor) {
 
   article.append(foot);
   return article;
+}
+
+// 78일차: 글 언어 표시(KO / EN). 언어를 모르면(예전 응답) 아무것도 붙이지 않는다
+function langBadge(lang) {
+  if (lang !== 'ko' && lang !== 'en') return null;
+  const b = document.createElement('span');
+  b.className = 'lang-badge';
+  b.textContent = lang === 'ko' ? 'KO' : 'EN';
+  b.title = lang === 'ko' ? '한국어' : 'English';
+  b.setAttribute('aria-label', t('lang.badge', { lang: lang === 'ko' ? '한국어' : 'English' }));
+  return b;
 }

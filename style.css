@@ -2224,3 +2224,48 @@ header h1 .app-back {
 @media (hover: none) {
   .card-photos-nav { display: none !important; }
 }
+
+/* 78일차: 글 언어 - 언어 고르기 줄, KO/EN 표시, 번역 보기 */
+.lang-bar {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+.lang-bar a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 6px;
+  color: var(--text-gray);
+  text-decoration: none;
+}
+.lang-bar a:hover { background: var(--main-color); }
+.lang-bar a[aria-current] {
+  background: var(--main-color);
+  color: var(--header-text);
+  font-weight: bold;
+}
+@media (max-width: 600px) {
+  .lang-bar a { min-height: 40px; }
+}
+.lang-badge {
+  display: inline-block;
+  padding: 0 5px;
+  border: 1px solid #cdbf9f;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.03em;
+  color: var(--text-gray);
+  vertical-align: 1px;
+}
+.translate-row { margin: 14px 0 0; font-size: 14px; color: var(--text-gray); }
+.translate-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--link-color);
+  font-weight: bold;
+}

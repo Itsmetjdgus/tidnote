@@ -1565,3 +1565,63 @@ revoke all on function public.get_post_likers(bigint) from public;
 grant execute on function public.get_post_likers(bigint) to anon, authenticated;
 
 notify pgrst, 'reload schema';
+
+-- 78일차 (2026-11-27): 글 언어 표시 + 언어별 피드
+-- 실행 순서: 이 블록을 SQL Editor 에서 한 번 실행 → 확인 SQL → 코드 병합(푸시)
+-- 글을 저장할 때 DB가 제목·본문의 글자를 세어 언어를 정한다: ko(한국어) / en(영어) / other(그 밖)
+-- 사용자가 고를 필요가 없고, 조작할 수도 없다(저장할 때마다 다시 계산).
+
+-- 1) 언어 판별: 링크 주소·사진 자리·서식 기호는 빼고, 한글 음절과 영문 글자 수를 비교한다
+--    한글 1음절이 영문 약 3글자 분량이라고 보고, 한글×3 ≥ 영문 이면 한국어
+create or replace function public.detect_post_lang(p_title text, p_content text)
+returns text
+language plpgsql
+immutable
+set search_path = ''
+as $$
+declare
+  body text;
+  h integer;
+  l integer;
+begin
+  body := coalesce(p_title, '') || ' ' || coalesce(p_content, '');
+  body := regexp_replace(body, '\(https?://[^)\s]*\)', ' ', 'g');
+  body := regexp_replace(body, 'https?://\S+', ' ', 'g');
+  body := regexp_replace(body, '\[(사진|photo)\d{1,2}\]', ' ', 'gi');
+  h := char_length(regexp_replace(body, '[^가-힣ㄱ-ㅎㅏ-ㅣ]', '', 'g'));
+  l := char_length(regexp_replace(body, '[^A-Za-z]', '', 'g'));
+  if h = 0 and l = 0 then
+    return 'other';
+  elsif h * 3 >= l then
+    return 'ko';
+  else
+    return 'en';
+  end if;
+end;
+$$;
+
+-- 2) 열 추가 + 기존 글 채우기
+alter table posts add column if not exists lang text not null default 'ko';
+alter table posts drop constraint if exists posts_lang_check;
+alter table posts add constraint posts_lang_check check (lang in ('ko', 'en', 'other'));
+update posts set lang = public.detect_post_lang(title, content);
+create index if not exists posts_lang_created_idx on posts (lang, created_at desc);
+
+-- 3) 저장할 때마다 다시 계산
+create or replace function public.set_post_lang()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  new.lang := public.detect_post_lang(new.title, new.content);
+  return new;
+end;
+$$;
+
+drop trigger if exists set_post_lang_trigger on public.posts;
+create trigger set_post_lang_trigger
+  before insert or update on public.posts
+  for each row execute function public.set_post_lang();
+
+notify pgrst, 'reload schema';
