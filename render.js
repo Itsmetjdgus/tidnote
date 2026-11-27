@@ -58,6 +58,92 @@ async function fillPostImages(root) {
   });
 }
 
+// 77일차: 카드에 보여 줄 사진 경로 목록. 대표 사진을 맨 앞으로, 최대 10장
+function cardPhotoPaths(post) {
+  const list = Array.isArray(post.images) ? post.images.slice() : [];
+  if (post.image_path) {
+    const i = list.indexOf(post.image_path);
+    if (i > 0) list.splice(i, 1);
+    if (i !== 0) list.unshift(post.image_path);
+  }
+  return list.slice(0, 10);
+}
+
+// 사진 넘겨 보기: 손가락으로 옆으로 밀거나(폰), 좌우 단추(PC)로 넘긴다. 사진을 누르면 글로 간다
+function createPhotoCarousel(paths, post) {
+  const box = document.createElement('div');
+  box.className = 'card-photos';
+  const track = document.createElement('div');
+  track.className = 'card-photos-track';
+  track.setAttribute('aria-label', t('photo.carousel', { n: paths.length }));
+  track.tabIndex = paths.length > 1 ? 0 : -1;
+  paths.forEach(function (path, i) {
+    const a = document.createElement('a');
+    a.className = 'card-photo';
+    a.href = 'post.html?id=' + post.id;
+    a.tabIndex = -1;
+    const img = document.createElement('img');
+    img.dataset.imagePath = path; // 실제 주소는 fillPostImages가 채운다
+    img.alt = paths.length > 1 ? post.title + ' (' + (i + 1) + '/' + paths.length + ')' : post.title;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    a.append(img);
+    track.append(a);
+  });
+  box.append(track);
+  if (paths.length < 2) return box;
+
+  const count = document.createElement('span');
+  count.className = 'card-photos-count';
+  count.setAttribute('aria-hidden', 'true');
+  const dots = document.createElement('div');
+  dots.className = 'card-photos-dots';
+  dots.setAttribute('aria-hidden', 'true');
+  paths.forEach(function () { dots.append(document.createElement('span')); });
+
+  function make(dir) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'card-photos-nav ' + (dir < 0 ? 'prev' : 'next');
+    b.setAttribute('aria-label', t(dir < 0 ? 'photo.prev' : 'photo.next'));
+    b.textContent = dir < 0 ? '‹' : '›';
+    b.addEventListener('click', function (e) {
+      e.preventDefault();
+      go(current() + dir);
+    });
+    return b;
+  }
+  const prev = make(-1);
+  const next = make(1);
+  box.append(prev, next, count, dots);
+
+  function current() {
+    return Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+  }
+  function go(i) {
+    i = Math.max(0, Math.min(paths.length - 1, i));
+    track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' });
+  }
+  function paint() {
+    const i = current();
+    count.textContent = (i + 1) + '/' + paths.length;
+    Array.from(dots.children).forEach(function (d, k) { d.classList.toggle('on', k === i); });
+    prev.hidden = i === 0;
+    next.hidden = i === paths.length - 1;
+  }
+  let raf = 0;
+  track.addEventListener('scroll', function () {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(paint);
+  }, { passive: true });
+  track.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(current() + 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); go(current() - 1); }
+  });
+  paint();
+  return box;
+}
+
 // 글 카드. showAuthor 가 true 이면(홈) 맨 위에 [프로필 사진 + 닉네임]이 붙고, 작성자 화면에서는 붙지 않는다.
 // 구조: 작성자 줄 / 날짜·카테고리 / (제목·미리보기 + 오른쪽 미리보기 사진) / 아래 줄: 댓글 수 + 해시태그
 function renderPostCard(post, showAuthor) {
@@ -91,6 +177,10 @@ function renderPostCard(post, showAuthor) {
     if (labels.length) dateText += ' · ' + labels.join(', ');
   }
   date.textContent = dateText;
+  if (typeof langBadge === 'function') {
+    const badge = langBadge(post.lang);
+    if (badge) date.append(' ', badge);
+  }
   article.append(date);
 
   const link = document.createElement('a');
@@ -112,15 +202,11 @@ function renderPostCard(post, showAuthor) {
   text.append(h2, preview);
   main.append(text);
 
-  if (post.image_path) {
-    const img = document.createElement('img');
-    img.dataset.imagePath = post.image_path; // 실제 주소는 fillPostImages가 채운다
-    img.alt = post.title;
-    img.className = 'post-thumb';
-    img.loading = 'lazy';
-    main.append(img);
-  }
   link.append(main);
+
+  // 77일차: 사진은 카드 위에 크게, 여러 장이면 옆으로 넘겨 보기(대표 사진이 첫 장)
+  const photos = cardPhotoPaths(post);
+  if (photos.length > 0) article.append(createPhotoCarousel(photos, post));
   article.append(link);
 
   // 아래 줄: 왼쪽 댓글 수, 오른쪽 해시태그(길면 ... 으로 줄임)
@@ -156,4 +242,15 @@ function renderPostCard(post, showAuthor) {
 
   article.append(foot);
   return article;
+}
+
+// 78일차: 글 언어 표시(KO / EN). 언어를 모르면(예전 응답) 아무것도 붙이지 않는다
+function langBadge(lang) {
+  if (lang !== 'ko' && lang !== 'en') return null;
+  const b = document.createElement('span');
+  b.className = 'lang-badge';
+  b.textContent = lang === 'ko' ? 'KO' : 'EN';
+  b.title = lang === 'ko' ? '한국어' : 'English';
+  b.setAttribute('aria-label', t('lang.badge', { lang: lang === 'ko' ? '한국어' : 'English' }));
+  return b;
 }

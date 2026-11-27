@@ -27,6 +27,7 @@ const SETTINGS_TREE = {
     { item: 'delete', title: 'settings.delete_title', danger: true },
   ],
   about: [
+    { item: 'install', title: 'install.title' },
     { item: 'feedback', title: 'fb.title' },
     { item: 'contact', title: 'settings.about_contact' },
     { href: 'help.html', title: 'settings.about_help' },

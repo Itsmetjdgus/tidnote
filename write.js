@@ -455,7 +455,7 @@
       }
       let blob = null;
       try {
-        blob = await resizeImage(file, 1600, 0.85);
+        blob = await resizeImage(file, 1280, 0.82); // 77일차: 1600px → 1280px(저장공간 절약)
       } catch (e) {
         blob = null;
       }
